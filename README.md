@@ -1,7 +1,5 @@
 ## Utils
 
-This repository implements a series of self-used C++ standard library components.
-
 *   **Containers:**
     *   array
     *   vector
@@ -23,3 +21,9 @@ build:
 cd build && cmake ..
 make
 ```
+
+todo:
+
+- [ ] type_traits
+- [ ] weak_ptr
+- [ ] Container Adapter
