@@ -1,12 +1,11 @@
 #pragma once
 
 #include <cassert>
+#include <core/_common.hpp>
 #include <iterator>
 #include <memory>
 #include <type_traits>
 #include <utility>
-
-#include <core/_common.hpp>
 
 enum _RbTreeColor {
     _S_black,
@@ -38,7 +37,9 @@ struct _RbTreeNodeImpl : _RbTreeNode {
             _Tp(std::forward<_Ts>(__value)...);
     }
 
-    void _M_destruct() noexcept { _M_value.~_Tp(); }
+    void _M_destruct() noexcept {
+        _M_value.~_Tp();
+    }
 
     _RbTreeNodeImpl() noexcept {}
 
@@ -51,7 +52,7 @@ struct _RbTreeIteratorBase;
 // 正向迭代器
 template <>
 struct _RbTreeIteratorBase<false> {
-  protected:
+protected:
     union {
         _RbTreeNode *_M_node;
         _RbTreeNode **_M_proot;
@@ -60,10 +61,12 @@ struct _RbTreeIteratorBase<false> {
     bool _M_off_by_one; // 标志是否是end()迭代器
 
     _RbTreeIteratorBase(_RbTreeNode *__node) noexcept
-        : _M_node(__node), _M_off_by_one(false) {}
+        : _M_node(__node),
+          _M_off_by_one(false) {}
 
     _RbTreeIteratorBase(_RbTreeNode **__proot) noexcept
-        : _M_proot(__proot), _M_off_by_one(true) {}
+        : _M_proot(__proot),
+          _M_off_by_one(true) {}
 
     template <class, class, class, class>
     friend struct _RbTreeImpl;
@@ -71,41 +74,41 @@ struct _RbTreeIteratorBase<false> {
     template <class, class, bool>
     friend struct _RbTreeIterator;
 
-  public:
-    bool operator==(_RbTreeIteratorBase const &__that) const noexcept {
-        return (!_M_off_by_one && !__that._M_off_by_one
-                && _M_node == __that._M_node)
-               || (_M_off_by_one && __that._M_off_by_one);
+public:
+    bool operator==(const _RbTreeIteratorBase &__that) const noexcept {
+        return (!_M_off_by_one && !__that._M_off_by_one &&
+                _M_node == __that._M_node) ||
+               (_M_off_by_one && __that._M_off_by_one);
     }
 
-    bool operator!=(_RbTreeIteratorBase const &__that) const noexcept {
+    bool operator!=(const _RbTreeIteratorBase &__that) const noexcept {
         return !(*this == __that);
     }
 
     void operator++() noexcept { // ++__it
         // 为了支持 ++rbegin()
-        if ( _M_off_by_one ) {
+        if (_M_off_by_one) {
             _M_off_by_one = false;
             _M_node = *_M_proot;
             assert(_M_node);
-            while ( _M_node->_M_left != nullptr ) {
+            while (_M_node->_M_left != nullptr) {
                 _M_node = _M_node->_M_left;
             }
             return;
         }
         assert(_M_node);
-        if ( _M_node->_M_right != nullptr ) {
+        if (_M_node->_M_right != nullptr) {
             _M_node = _M_node->_M_right;
-            while ( _M_node->_M_left != nullptr ) {
+            while (_M_node->_M_left != nullptr) {
                 _M_node = _M_node->_M_left;
             }
         } else { // 如果当前节点没有右子节点，后继节点是其最近的祖先节点，且该祖先节点的左子树包含当前节点
-            while ( _M_node->_M_parent != nullptr
-                    && _M_node->_M_pparent == &_M_node->_M_parent->_M_right ) {
+            while (_M_node->_M_parent != nullptr &&
+                   _M_node->_M_pparent == &_M_node->_M_parent->_M_right) {
                 _M_node = _M_node->_M_parent;
             }
             // 如果回溯到根节点，说明当前节点是最大节点，后继为end()
-            if ( _M_node->_M_parent == nullptr ) {
+            if (_M_node->_M_parent == nullptr) {
                 _M_off_by_one = true;
                 return;
             }
@@ -116,27 +119,27 @@ struct _RbTreeIteratorBase<false> {
     // 找到前驱节点
     void operator--() noexcept { // --__it
         // 为了支持 --end()
-        if ( _M_off_by_one ) {
+        if (_M_off_by_one) {
             _M_off_by_one = false;
             _M_node = *_M_proot;
             assert(_M_node);
-            while ( _M_node->_M_right != nullptr ) {
+            while (_M_node->_M_right != nullptr) {
                 _M_node = _M_node->_M_right;
             }
             return;
         }
         assert(_M_node);
-        if ( _M_node->_M_left != nullptr ) {
+        if (_M_node->_M_left != nullptr) {
             _M_node = _M_node->_M_left;
-            while ( _M_node->_M_right != nullptr ) {
+            while (_M_node->_M_right != nullptr) {
                 _M_node = _M_node->_M_right;
             }
         } else { // 如果当前节点没有左子节点，前驱节点是其最近的祖先节点，且该祖先节点的右子树包含当前节点
-            while ( _M_node->_M_parent != nullptr
-                    && _M_node->_M_pparent == &_M_node->_M_parent->_M_left ) {
+            while (_M_node->_M_parent != nullptr &&
+                   _M_node->_M_pparent == &_M_node->_M_parent->_M_left) {
                 _M_node = _M_node->_M_parent;
             }
-            if ( _M_node->_M_parent == nullptr ) {
+            if (_M_node->_M_parent == nullptr) {
                 _M_off_by_one = true;
                 return;
             }
@@ -151,10 +154,10 @@ struct _RbTreeIteratorBase<false> {
 // 反向迭代器
 template <>
 struct _RbTreeIteratorBase<true> : _RbTreeIteratorBase<false> {
-  protected:
+protected:
     using _RbTreeIteratorBase<false>::_RbTreeIteratorBase;
 
-  public:
+public:
     void operator++() noexcept { // ++__it
         _RbTreeIteratorBase<false>::operator--();
     }
@@ -167,17 +170,17 @@ struct _RbTreeIteratorBase<true> : _RbTreeIteratorBase<false> {
 // 红黑树迭代器实现
 template <class _NodeImpl, class _Tp, bool _Reverse>
 struct _RbTreeIterator : _RbTreeIteratorBase<_Reverse> {
-  protected:
+protected:
     using _RbTreeIteratorBase<_Reverse>::_RbTreeIteratorBase;
 
-  public:
+public:
     // 类型转换
     template <class T0 = _Tp>
     explicit operator std::enable_if_t<
         std::is_const_v<T0>,
         _RbTreeIterator<_NodeImpl, std::remove_const_t<T0>, _Reverse>>()
         const noexcept {
-        if ( !this->_M_off_by_one ) {
+        if (!this->_M_off_by_one) {
             return this->_M_node;
         } else {
             return this->_M_proot;
@@ -185,11 +188,10 @@ struct _RbTreeIterator : _RbTreeIteratorBase<_Reverse> {
     }
 
     template <class T0 = _Tp>
-    operator std::enable_if_t<
-        !std::is_const_v<T0>,
-        _RbTreeIterator<_NodeImpl, std::add_const_t<T0>, _Reverse>>()
-        const noexcept {
-        if ( !this->_M_off_by_one ) {
+    operator std::enable_if_t<!std::is_const_v<T0>,
+                              _RbTreeIterator<_NodeImpl, std::add_const_t<T0>,
+                                              _Reverse>>() const noexcept {
+        if (!this->_M_off_by_one) {
             return this->_M_node;
         } else {
             return this->_M_proot;
@@ -246,7 +248,7 @@ struct _RbTreeRoot {
 };
 
 struct _RbTreeBase {
-  protected:
+protected:
     _RbTreeRoot *_M_block;
 
     explicit _RbTreeBase(_RbTreeRoot *__block) : _M_block(__block) {}
@@ -263,15 +265,15 @@ struct _RbTreeBase {
     static void _M_deallocate(_Alloc __alloc, void *__ptr) noexcept {
         typename std::allocator_traits<_Alloc>::template rebind_alloc<_Type>
             __rebind_alloc(__alloc);
-        std::allocator_traits<_Alloc>::template rebind_traits<_Type>::
-            deallocate(
-                __rebind_alloc, static_cast<_Type *>(__ptr), sizeof(_Type));
+        std::allocator_traits<_Alloc>::template rebind_traits<
+            _Type>::deallocate(__rebind_alloc, static_cast<_Type *>(__ptr),
+                               sizeof(_Type));
     }
 
     static void _M_rotate_left(_RbTreeNode *__node) noexcept {
         _RbTreeNode *__right = __node->_M_right;
         __node->_M_right = __right->_M_left;
-        if ( __right->_M_left != nullptr ) {
+        if (__right->_M_left != nullptr) {
             __right->_M_left->_M_parent = __node;
             __right->_M_left->_M_pparent = &__node->_M_right;
         }
@@ -286,7 +288,7 @@ struct _RbTreeBase {
     static void _M_rotate_right(_RbTreeNode *__node) noexcept {
         _RbTreeNode *__left = __node->_M_left;
         __node->_M_left = __left->_M_right;
-        if ( __left->_M_right != nullptr ) {
+        if (__left->_M_right != nullptr) {
             __left->_M_right->_M_parent = __node;
             __left->_M_right->_M_pparent = &__node->_M_left;
         }
@@ -299,15 +301,15 @@ struct _RbTreeBase {
     }
 
     static void _M_fix_violation(_RbTreeNode *__node) noexcept {
-        while ( true ) {
+        while (true) {
             _RbTreeNode *__parent = __node->_M_parent;
-            if ( __parent == nullptr ) { // 根节点的 __parent 总是 nullptr
+            if (__parent == nullptr) { // 根节点的 __parent 总是 nullptr
                 // 情况 0: __node == root
                 __node->_M_color = _S_black;
                 return;
             }
-            if ( __node->_M_color == _S_black
-                 || __parent->_M_color == _S_black ) {
+            if (__node->_M_color == _S_black ||
+                __parent->_M_color == _S_black) {
                 return;
             }
             _RbTreeNode *__uncle;
@@ -316,7 +318,7 @@ struct _RbTreeBase {
             _RbTreeChildDir __parent_dir =
                 __parent->_M_pparent == &__grandpa->_M_left ? _S_left
                                                             : _S_right;
-            if ( __parent_dir == _S_left ) {
+            if (__parent_dir == _S_left) {
                 __uncle = __grandpa->_M_right;
             } else {
                 assert(__parent->_M_pparent == &__grandpa->_M_right);
@@ -324,14 +326,14 @@ struct _RbTreeBase {
             }
             _RbTreeChildDir __node_dir =
                 __node->_M_pparent == &__parent->_M_left ? _S_left : _S_right;
-            if ( __uncle != nullptr && __uncle->_M_color == _S_red ) {
+            if (__uncle != nullptr && __uncle->_M_color == _S_red) {
                 // 情况 1: 叔叔是红色人士
                 __parent->_M_color = _S_black;
                 __uncle->_M_color = _S_black;
                 __grandpa->_M_color = _S_red;
                 __node = __grandpa;
-            } else if ( __node_dir == __parent_dir ) {
-                if ( __node_dir == _S_right ) {
+            } else if (__node_dir == __parent_dir) {
+                if (__node_dir == _S_right) {
                     assert(__node->_M_pparent == &__parent->_M_right);
                     // 情况 2: 叔叔是黑色人士（RR）
                     _RbTreeBase::_M_rotate_left(__grandpa);
@@ -342,7 +344,7 @@ struct _RbTreeBase {
                 std::swap(__parent->_M_color, __grandpa->_M_color);
                 __node = __grandpa;
             } else {
-                if ( __node_dir == _S_right ) {
+                if (__node_dir == _S_right) {
                     assert(__node->_M_pparent == &__parent->_M_right);
                     // 情况 4: 叔叔是黑色人士（LR）
                     _RbTreeBase::_M_rotate_left(__parent);
@@ -357,8 +359,8 @@ struct _RbTreeBase {
 
     _RbTreeNode *_M_min_node() const noexcept {
         _RbTreeNode *__current = _M_block->_M_root;
-        if ( __current != nullptr ) {
-            while ( __current->_M_left != nullptr ) {
+        if (__current != nullptr) {
+            while (__current->_M_left != nullptr) {
                 __current = __current->_M_left;
             }
         }
@@ -367,8 +369,8 @@ struct _RbTreeBase {
 
     _RbTreeNode *_M_max_node() const noexcept {
         _RbTreeNode *__current = _M_block->_M_root;
-        if ( __current != nullptr ) {
-            while ( __current->_M_right != nullptr ) {
+        if (__current != nullptr) {
+            while (__current->_M_right != nullptr) {
                 __current = __current->_M_right;
             }
         }
@@ -378,14 +380,14 @@ struct _RbTreeBase {
     template <class _NodeImpl, class _Tv, class _Compare>
     _RbTreeNode *_M_find_node(_Tv &&__value, _Compare __comp) const noexcept {
         _RbTreeNode *__current = _M_block->_M_root;
-        while ( __current != nullptr ) {
-            if ( __comp(
-                     __value, static_cast<_NodeImpl *>(__current)->_M_value) ) {
+        while (__current != nullptr) {
+            if (__comp(__value,
+                       static_cast<_NodeImpl *>(__current)->_M_value)) {
                 __current = __current->_M_left;
                 continue;
             }
-            if ( __comp(
-                     static_cast<_NodeImpl *>(__current)->_M_value, __value) ) {
+            if (__comp(static_cast<_NodeImpl *>(__current)->_M_value,
+                       __value)) {
                 __current = __current->_M_right;
                 continue;
             }
@@ -399,10 +401,9 @@ struct _RbTreeBase {
     _RbTreeNode *_M_lower_bound(_Tv &&__value, _Compare __comp) const noexcept {
         _RbTreeNode *__current = _M_block->_M_root;
         _RbTreeNode *__result = nullptr;
-        while ( __current != nullptr ) {
-            if ( !(__comp(
-                     static_cast<_NodeImpl *>(__current)->_M_value,
-                     __value)) ) { // __current->_M_value >= __value
+        while (__current != nullptr) {
+            if (!(__comp(static_cast<_NodeImpl *>(__current)->_M_value,
+                         __value))) { // __current->_M_value >= __value
                 __result = __current;
                 __current = __current->_M_left;
             } else {
@@ -416,11 +417,10 @@ struct _RbTreeBase {
     _RbTreeNode *_M_upper_bound(_Tv &&__value, _Compare __comp) const noexcept {
         _RbTreeNode *__current = _M_block->_M_root;
         _RbTreeNode *__result = nullptr;
-        while ( __current != nullptr ) {
-            if ( __comp(
-                     __value,
-                     static_cast<_NodeImpl *>(__current)
-                         ->_M_value) ) { // __current->_M_value > __value
+        while (__current != nullptr) {
+            if (__comp(__value,
+                       static_cast<_NodeImpl *>(__current)
+                           ->_M_value)) { // __current->_M_value > __value
                 __result = __current;
                 __current = __current->_M_left;
             } else {
@@ -433,33 +433,34 @@ struct _RbTreeBase {
     template <class _NodeImpl, class _Tv, class _Compare>
     std::pair<_RbTreeNode *, _RbTreeNode *>
     _M_equal_range(_Tv &&__value, _Compare __comp) const noexcept {
-        return {
-            this->_M_lower_bound<_NodeImpl>(__value, __comp),
-            this->_M_upper_bound<_NodeImpl>(__value, __comp)};
+        return {this->_M_lower_bound<_NodeImpl>(__value, __comp),
+                this->_M_upper_bound<_NodeImpl>(__value, __comp)};
     }
 
-    static void
-    _M_transplant(_RbTreeNode *__node, _RbTreeNode *__replace) noexcept {
+    static void _M_transplant(_RbTreeNode *__node,
+                              _RbTreeNode *__replace) noexcept {
         *__node->_M_pparent = __replace;
-        if ( __replace != nullptr ) {
+        if (__replace != nullptr) {
             __replace->_M_parent = __node->_M_parent;
             __replace->_M_pparent = __node->_M_pparent;
         }
     }
 
     static void _M_delete_fixup(_RbTreeNode *__node) noexcept {
-        if ( __node == nullptr ) { return; }
-        while ( __node->_M_parent != nullptr && __node->_M_color == _S_black ) {
+        if (__node == nullptr) {
+            return;
+        }
+        while (__node->_M_parent != nullptr && __node->_M_color == _S_black) {
             _RbTreeChildDir __dir =
                 __node->_M_pparent == &__node->_M_parent->_M_left ? _S_left
                                                                   : _S_right;
             _RbTreeNode *__sibling = __dir == _S_left
                                          ? __node->_M_parent->_M_right
                                          : __node->_M_parent->_M_left;
-            if ( __sibling->_M_color == _S_red ) {
+            if (__sibling->_M_color == _S_red) {
                 __sibling->_M_color = _S_black;
                 __node->_M_parent->_M_color = _S_red;
-                if ( __dir == _S_left ) {
+                if (__dir == _S_left) {
                     _RbTreeBase::_M_rotate_left(__node->_M_parent);
                 } else {
                     _RbTreeBase::_M_rotate_right(__node->_M_parent);
@@ -467,20 +468,19 @@ struct _RbTreeBase {
                 __sibling = __dir == _S_left ? __node->_M_parent->_M_right
                                              : __node->_M_parent->_M_left;
             }
-            if ( __sibling->_M_left->_M_color == _S_black
-                 && __sibling->_M_right->_M_color == _S_black ) {
+            if (__sibling->_M_left->_M_color == _S_black &&
+                __sibling->_M_right->_M_color == _S_black) {
                 __sibling->_M_color = _S_red;
                 __node = __node->_M_parent;
             } else {
-                if ( __dir == _S_left
-                     && __sibling->_M_right->_M_color == _S_black ) {
+                if (__dir == _S_left &&
+                    __sibling->_M_right->_M_color == _S_black) {
                     __sibling->_M_left->_M_color = _S_black;
                     __sibling->_M_color = _S_red;
                     _RbTreeBase::_M_rotate_right(__sibling);
                     __sibling = __node->_M_parent->_M_right;
-                } else if (
-                    __dir == _S_right
-                    && __sibling->_M_left->_M_color == _S_black ) {
+                } else if (__dir == _S_right &&
+                           __sibling->_M_left->_M_color == _S_black) {
                     __sibling->_M_right->_M_color = _S_black;
                     __sibling->_M_color = _S_red;
                     _RbTreeBase::_M_rotate_left(__sibling);
@@ -488,7 +488,7 @@ struct _RbTreeBase {
                 }
                 __sibling->_M_color = __node->_M_parent->_M_color;
                 __node->_M_parent->_M_color = _S_black;
-                if ( __dir == _S_left ) {
+                if (__dir == _S_left) {
                     __sibling->_M_right->_M_color = _S_black;
                     _RbTreeBase::_M_rotate_left(__node->_M_parent);
                 } else {
@@ -506,27 +506,29 @@ struct _RbTreeBase {
 
     // 如果树中已存在相同值的节点，则不插入（用于set、map）
     static void _M_erase_node(_RbTreeNode *__node) noexcept {
-        if ( __node->_M_left == nullptr ) {
+        if (__node->_M_left == nullptr) {
             _RbTreeNode *__right = __node->_M_right;
             _RbTreeColor __color = __node->_M_color;
             _RbTreeBase::_M_transplant(__node, __right);
-            if ( __color == _S_black ) {
+            if (__color == _S_black) {
                 _RbTreeBase::_M_delete_fixup(__right);
             }
-        } else if ( __node->_M_right == nullptr ) {
+        } else if (__node->_M_right == nullptr) {
             _RbTreeNode *__left = __node->_M_left;
             _RbTreeColor __color = __node->_M_color;
             _RbTreeBase::_M_transplant(__node, __left);
-            if ( __color == _S_black ) { _RbTreeBase::_M_delete_fixup(__left); }
+            if (__color == _S_black) {
+                _RbTreeBase::_M_delete_fixup(__left);
+            }
         } else {
             _RbTreeNode *__replace = __node->_M_right;
-            while ( __replace->_M_left != nullptr ) {
+            while (__replace->_M_left != nullptr) {
                 __replace = __replace->_M_left;
             }
             _RbTreeNode *__right = __replace->_M_right;
             _RbTreeColor __color = __replace->_M_color;
-            if ( __replace->_M_parent == __node ) {
-                if ( __right != nullptr ) {
+            if (__replace->_M_parent == __node) {
+                if (__right != nullptr) {
                     __right->_M_parent = __replace;
                     __right->_M_pparent = &__replace->_M_right;
                 }
@@ -540,7 +542,7 @@ struct _RbTreeBase {
             __replace->_M_left = __node->_M_left;
             __replace->_M_left->_M_parent = __replace;
             __replace->_M_left->_M_pparent = &__replace->_M_left;
-            if ( __color == _S_black ) {
+            if (__color == _S_black) {
                 _RbTreeBase::_M_delete_fixup(__right);
             }
         }
@@ -551,17 +553,15 @@ struct _RbTreeBase {
     _RbTreeNode *_M_single_insert_node(_RbTreeNode *__node, _Compare __comp) {
         _RbTreeNode **__pparent = &_M_block->_M_root;
         _RbTreeNode *__parent = nullptr;
-        while ( *__pparent != nullptr ) {
+        while (*__pparent != nullptr) {
             __parent = *__pparent;
-            if ( __comp(
-                     static_cast<_NodeImpl *>(__node)->_M_value,
-                     static_cast<_NodeImpl *>(__parent)->_M_value) ) {
+            if (__comp(static_cast<_NodeImpl *>(__node)->_M_value,
+                       static_cast<_NodeImpl *>(__parent)->_M_value)) {
                 __pparent = &__parent->_M_left;
                 continue;
             }
-            if ( __comp(
-                     static_cast<_NodeImpl *>(__parent)->_M_value,
-                     static_cast<_NodeImpl *>(__node)->_M_value) ) {
+            if (__comp(static_cast<_NodeImpl *>(__parent)->_M_value,
+                       static_cast<_NodeImpl *>(__node)->_M_value)) {
                 __pparent = &__parent->_M_right;
                 continue;
             }
@@ -583,17 +583,15 @@ struct _RbTreeBase {
     void _M_multi_insert_node(_RbTreeNode *__node, _Compare __comp) {
         _RbTreeNode **__pparent = &_M_block->_M_root;
         _RbTreeNode *__parent = nullptr;
-        while ( *__pparent != nullptr ) {
+        while (*__pparent != nullptr) {
             __parent = *__pparent;
-            if ( __comp(
-                     static_cast<_NodeImpl *>(__node)->_M_value,
-                     static_cast<_NodeImpl *>(__parent)->_M_value) ) {
+            if (__comp(static_cast<_NodeImpl *>(__node)->_M_value,
+                       static_cast<_NodeImpl *>(__parent)->_M_value)) {
                 __pparent = &__parent->_M_left;
                 continue;
             }
-            if ( __comp(
-                     static_cast<_NodeImpl *>(__parent)->_M_value,
-                     static_cast<_NodeImpl *>(__node)->_M_value) ) {
+            if (__comp(static_cast<_NodeImpl *>(__parent)->_M_value,
+                       static_cast<_NodeImpl *>(__node)->_M_value)) {
                 __pparent = &__parent->_M_right;
                 continue;
             }
@@ -611,24 +609,21 @@ struct _RbTreeBase {
     }
 };
 
-template <
-    class _Tp,
-    class _Compare,
-    class _Alloc,
-    class _NodeImpl,
-    class = void>
+template <class _Tp, class _Compare, class _Alloc, class _NodeImpl,
+          class = void>
 struct _RbTreeNodeHandle {
-  protected:
+protected:
     _NodeImpl *_M_node;
     [[no_unique_address]] _Alloc _M_alloc;
 
     _RbTreeNodeHandle(_NodeImpl *__node, _Alloc __alloc) noexcept
-        : _M_node(__node), _M_alloc(__alloc) {}
+        : _M_node(__node),
+          _M_alloc(__alloc) {}
 
     template <class, class, class, class>
     friend struct _RbTreeImpl;
 
-  public:
+public:
     _RbTreeNodeHandle() noexcept : _M_node(nullptr) {}
 
     _RbTreeNodeHandle(_RbTreeNodeHandle &&__that) noexcept
@@ -646,7 +641,7 @@ struct _RbTreeNodeHandle {
     }
 
     ~_RbTreeNodeHandle() noexcept {
-        if ( _M_node ) {
+        if (_M_node) {
             _RbTreeBase::_M_deallocate<_NodeImpl>(_M_alloc, _M_node);
         }
     }
@@ -654,10 +649,7 @@ struct _RbTreeNodeHandle {
 
 template <class _Tp, class _Compare, class _Alloc, class _NodeImpl>
 struct _RbTreeNodeHandle<
-    _Tp,
-    _Compare,
-    _Alloc,
-    _NodeImpl,
+    _Tp, _Compare, _Alloc, _NodeImpl,
     decltype((void)static_cast<typename _Compare::_RbTreeIsMap *>(nullptr))>
     : _RbTreeNodeHandle<_Tp, _Compare, _Alloc, _NodeImpl, void *> {
     typename _Tp::first_type &key() const noexcept {
@@ -669,17 +661,14 @@ struct _RbTreeNodeHandle<
     }
 };
 
-template <
-    class _Tp,
-    class _Compare,
-    class _Alloc,
-    class _NodeImpl = _RbTreeNodeImpl<_Tp>>
+template <class _Tp, class _Compare, class _Alloc,
+          class _NodeImpl = _RbTreeNodeImpl<_Tp>>
 struct _RbTreeImpl : protected _RbTreeBase {
-  protected:
+protected:
     [[no_unique_address]] _Compare _M_comp;
     [[no_unique_address]] _Alloc _M_alloc;
 
-  public:
+public:
     _RbTreeImpl() noexcept
         : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc)) {
         _M_block->_M_root = nullptr;
@@ -691,15 +680,15 @@ struct _RbTreeImpl : protected _RbTreeBase {
     }
 
     explicit _RbTreeImpl(_Compare __comp) noexcept
-        : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc))
-        , _M_comp(__comp) {
+        : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc)),
+          _M_comp(__comp) {
         _M_block->_M_root = nullptr;
     }
 
     explicit _RbTreeImpl(_Alloc alloc, _Compare __comp = _Compare()) noexcept
-        : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc))
-        , _M_alloc(alloc)
-        , _M_comp(__comp) {
+        : _RbTreeBase(_RbTreeBase::_M_allocate<_RbTreeRoot>(_M_alloc)),
+          _M_alloc(alloc),
+          _M_comp(__comp) {
         _M_block->_M_root = nullptr;
     }
 
@@ -713,28 +702,28 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return *this;
     }
 
-  protected:
-    template <
-        _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+protected:
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator,
+                                                     _InputIt)>
     void _M_single_insert(_InputIt __first, _InputIt __last) {
-        while ( __first != __last ) {
+        while (__first != __last) {
             this->_M_single_insert(*__first);
             ++__first;
         }
     }
 
-    template <
-        _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator,
+                                                     _InputIt)>
     void _M_multi_insert(_InputIt __first, _InputIt __last) {
-        while ( __first != __last ) {
+        while (__first != __last) {
             this->_M_multi_insert(*__first);
             ++__first;
         }
     }
 
-  public:
-    template <
-        _LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator, _InputIt)>
+public:
+    template <_LIBPENGCXX_REQUIRES_ITERATOR_CATEGORY(std::input_iterator,
+                                                     _InputIt)>
     void assign(_InputIt __first, _InputIt __last) {
         this->clear();
         this->_M_multi_insert(__first, __last);
@@ -742,10 +731,10 @@ struct _RbTreeImpl : protected _RbTreeBase {
 
     using iterator = _RbTreeIterator<_NodeImpl, _Tp, false>;
     using reverse_iterator = _RbTreeIterator<_NodeImpl, _Tp, true>;
-    using const_iterator = _RbTreeIterator<_NodeImpl, _Tp const, false>;
-    using const_reverse_iterator = _RbTreeIterator<_NodeImpl, _Tp const, true>;
+    using const_iterator = _RbTreeIterator<_NodeImpl, const _Tp, false>;
+    using const_reverse_iterator = _RbTreeIterator<_NodeImpl, const _Tp, true>;
 
-  protected:
+protected:
     template <class _Tv>
     const_iterator _M_find(_Tv &&__value) const noexcept {
         return this->_M_prevent_end(
@@ -773,7 +762,7 @@ struct _RbTreeImpl : protected _RbTreeBase {
             std::forward<_Ts>(__value)...);
         _RbTreeNode *__conflict =
             this->_M_single_insert_node<_NodeImpl>(__node, _M_comp);
-        if ( __conflict ) {
+        if (__conflict) {
             static_cast<_NodeImpl *>(__node)->_M_destruct();
             _RbTreeBase::_M_deallocate<_NodeImpl>(_M_alloc, __node);
             return {__conflict, false};
@@ -782,10 +771,12 @@ struct _RbTreeImpl : protected _RbTreeBase {
         }
     }
 
-  public:
+public:
     void clear() noexcept {
         iterator __it = this->begin();
-        while ( __it != this->end() ) { __it = this->erase(__it); }
+        while (__it != this->end()) {
+            __it = this->erase(__it);
+        }
     }
 
     iterator erase(const_iterator __it) noexcept {
@@ -806,7 +797,7 @@ struct _RbTreeImpl : protected _RbTreeBase {
         _NodeImpl *__node = __nh._M_node;
         _RbTreeNode *__conflict =
             this->_M_single_insert_node<_NodeImpl>(__node, _M_comp);
-        if ( __conflict ) {
+        if (__conflict) {
             static_cast<_NodeImpl *>(__node)->_M_destruct();
             return {__conflict, false};
         } else {
@@ -820,11 +811,11 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return {__node, _M_alloc};
     }
 
-  protected:
+protected:
     template <class _Tv>
     size_t _M_single_erase(_Tv &&__value) noexcept {
         _RbTreeNode *__node = this->_M_find_node<_NodeImpl>(__value, _M_comp);
-        if ( __node != nullptr ) {
+        if (__node != nullptr) {
             this->_M_erase_node(__node);
             static_cast<_NodeImpl *>(__node)->_M_destruct();
             _RbTreeBase::_M_deallocate<_NodeImpl>(_M_alloc, __node);
@@ -834,11 +825,11 @@ struct _RbTreeImpl : protected _RbTreeBase {
         }
     }
 
-    std::pair<iterator, size_t>
-    _M_erase_range(const_iterator __first, const_iterator __last) noexcept {
+    std::pair<iterator, size_t> _M_erase_range(const_iterator __first,
+                                               const_iterator __last) noexcept {
         size_t __num = 0;
         iterator __it(__first);
-        while ( __it != __last ) {
+        while (__it != __last) {
             __it = this->erase(__it);
             ++__num;
         }
@@ -851,84 +842,78 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return this->_M_erase_range(__range.first, __range.second).second;
     }
 
-  public:
+public:
     iterator erase(const_iterator __first, const_iterator __last) noexcept {
         return _RbTreeImpl::_M_erase_range(__first, __last).first;
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     iterator lower_bound(_Tv &&__value) noexcept {
         return this->_M_lower_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator lower_bound(_Tv &&__value) const noexcept {
         return this->_M_lower_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     iterator upper_bound(_Tv &&__value) noexcept {
         return this->_M_upper_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     const_iterator upper_bound(_Tv &&__value) const noexcept {
         return this->_M_upper_bound<_NodeImpl>(__value, _M_comp);
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     std::pair<iterator, iterator> equal_range(_Tv &&__value) noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    template <
-        class _Tv,
-        _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
+    template <class _Tv,
+              _LIBPENGCXX_REQUIRES_TRANSPARENT_COMPARE(_Compare, _Tv, _Tp)>
     std::pair<const_iterator, const_iterator>
     equal_range(_Tv &&__value) const noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-    iterator lower_bound(_Tp const &__value) noexcept {
+    iterator lower_bound(const _Tp &__value) noexcept {
         return this->_M_prevent_end(
             this->_M_lower_bound<_NodeImpl>(__value, _M_comp));
     }
 
-    const_iterator lower_bound(_Tp const &__value) const noexcept {
+    const_iterator lower_bound(const _Tp &__value) const noexcept {
         return this->_M_prevent_end(
             this->_M_lower_bound<_NodeImpl>(__value, _M_comp));
     }
 
-    iterator upper_bound(_Tp const &__value) noexcept {
+    iterator upper_bound(const _Tp &__value) noexcept {
         return this->_M_prevent_end(
             this->_M_upper_bound<_NodeImpl>(__value, _M_comp));
     }
 
-    const_iterator upper_bound(_Tp const &__value) const noexcept {
+    const_iterator upper_bound(const _Tp &__value) const noexcept {
         return this->_M_prevent_end(
             this->_M_upper_bound<_NodeImpl>(__value, _M_comp));
     }
 
-    std::pair<iterator, iterator> equal_range(_Tp const &__value) noexcept {
+    std::pair<iterator, iterator> equal_range(const _Tp &__value) noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
     std::pair<const_iterator, const_iterator>
-    equal_range(_Tp const &__value) const noexcept {
+    equal_range(const _Tp &__value) const noexcept {
         return {this->lower_bound(__value), this->upper_bound(__value)};
     }
 
-  protected:
+protected:
     template <class _Tv>
     size_t _M_multi_count(_Tv &&__value) const noexcept {
         const_iterator __it = this->lower_bound(__value);
@@ -937,8 +922,8 @@ struct _RbTreeImpl : protected _RbTreeBase {
 
     template <class _Tv>
     bool _M_contains(_Tv &&__value) const noexcept {
-        return this->template _M_find_node<_NodeImpl>(__value, _M_comp)
-               != nullptr;
+        return this->template _M_find_node<_NodeImpl>(__value, _M_comp) !=
+               nullptr;
     }
 
     iterator _M_prevent_end(_RbTreeNode *__node) noexcept {
@@ -957,7 +942,7 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return __node == nullptr ? rend() : __node;
     }
 
-  public:
+public:
     iterator begin() noexcept {
         return this->_M_prevent_end(this->_M_min_node());
     }
@@ -966,9 +951,13 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return this->_M_prevent_rend(this->_M_max_node());
     }
 
-    iterator end() noexcept { return &_M_block->_M_root; }
+    iterator end() noexcept {
+        return &_M_block->_M_root;
+    }
 
-    reverse_iterator rend() noexcept { return &_M_block->_M_root; }
+    reverse_iterator rend() noexcept {
+        return &_M_block->_M_root;
+    }
 
     const_iterator begin() const noexcept {
         return this->_M_prevent_end(this->_M_min_node());
@@ -978,40 +967,44 @@ struct _RbTreeImpl : protected _RbTreeBase {
         return this->_M_prevent_rend(this->_M_max_node());
     }
 
-    const_iterator end() const noexcept { return &_M_block->_M_root; }
+    const_iterator end() const noexcept {
+        return &_M_block->_M_root;
+    }
 
-    const_reverse_iterator rend() const noexcept { return &_M_block->_M_root; }
+    const_reverse_iterator rend() const noexcept {
+        return &_M_block->_M_root;
+    }
 
 #ifndef NDEBUG
     template <class _Ostream>
     void _M_print(_Ostream &__os, _RbTreeNode *__node) {
-        if ( __node ) {
+        if (__node) {
             _Tp &__value = static_cast<_NodeImpl *>(__node)->_M_value;
             __os << '(';
-#if __cpp_concepts && __cpp_if_constexpr
-            if constexpr ( requires(_Tp __t) {
-                               __t.first;
-                               __t.second;
-                           } ) {
+# if __cpp_concepts && __cpp_if_constexpr
+            if constexpr (requires(_Tp __t) {
+                              __t.first;
+                              __t.second;
+                          }) {
                 __os << __value.first << ':' << __value.second;
             } else {
                 __os << __value;
             }
             __os << ' ';
-#endif
+# endif
             __os << (__node->_M_color == _S_black ? 'B' : 'R');
             __os << ' ';
-            if ( __node->_M_left ) {
-                if ( __node->_M_left->_M_parent != __node
-                     || __node->_M_left->_M_pparent != &__node->_M_left ) {
+            if (__node->_M_left) {
+                if (__node->_M_left->_M_parent != __node ||
+                    __node->_M_left->_M_pparent != &__node->_M_left) {
                     __os << '*';
                 }
             }
             _M_print(__os, __node->_M_left);
             __os << ' ';
-            if ( __node->_M_right ) {
-                if ( __node->_M_right->_M_parent != __node
-                     || __node->_M_right->_M_pparent != &__node->_M_right ) {
+            if (__node->_M_right) {
+                if (__node->_M_right->_M_parent != __node ||
+                    __node->_M_right->_M_pparent != &__node->_M_right) {
                     __os << '*';
                 }
             }

@@ -1,18 +1,17 @@
-#include <stdio.h>
-
 #include <containers/vector.hpp>
+#include <stdio.h>
 
 int main() {
     Marcus::vector<int> arr;
 
-    for ( int i = 0; i < 16; i++ ) {
+    for (int i = 0; i < 16; i++) {
         printf("arr.push_back(%d)\n", i);
         arr.push_back(i);
     }
 
     arr.insert(arr.begin() + 3, {40, 41, 42});
 
-    for ( size_t i = 0; i < arr.size(); i++ ) {
+    for (size_t i = 0; i < arr.size(); i++) {
         printf("arr[%zd] = %d\n", i, arr[i]);
     }
 

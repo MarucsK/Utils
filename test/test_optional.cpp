@@ -1,16 +1,19 @@
 #include <cstdio>
-#include <optional>
-#include <string>
 #include <iostream>
 #include <memory>
+#include <optional>
+#include <string>
+#include <utility/optional.hpp>
 #include <vector>
 
-#include <utility/optional.hpp>
-
 struct C {
-    C(int x, int y) : m_x(x), m_y(y) { printf("C(x,y) \n"); }
+    C(int x, int y) : m_x(x), m_y(y) {
+        printf("C(x,y) \n");
+    }
 
-    C(const C &) { printf("C(C const &)\n"); }
+    C(const C &) {
+        printf("C(C const &)\n");
+    }
 
     C &operator=(const C &) {
         printf("C &operator=(C const &)\n");
@@ -22,9 +25,13 @@ struct C {
         return *this;
     }
 
-    ~C() { printf("~C()\n"); }
+    ~C() {
+        printf("~C()\n");
+    }
 
-    int value() const { return m_x; }
+    int value() const {
+        return m_x;
+    }
 
     int m_x;
     int m_y;
@@ -32,13 +39,19 @@ struct C {
 
 namespace CC {
 struct C {
-    C(int x, int y) : m_x(x), m_y(y) { printf("C(x,y) \n"); }
+    C(int x, int y) : m_x(x), m_y(y) {
+        printf("C(x,y) \n");
+    }
 
-    C(C const &) { printf("C(C const &)\n"); }
+    C(const C &) {
+        printf("C(C const &)\n");
+    }
 
-    C(C &&) { printf("C(C &&)\n"); }
+    C(C &&) {
+        printf("C(C &&)\n");
+    }
 
-    C &operator=(C const &) {
+    C &operator=(const C &) {
         printf("C &operator=(C const &)\n");
         return *this;
     }
@@ -48,9 +61,13 @@ struct C {
         return *this;
     }
 
-    ~C() { printf("~C()\n"); }
+    ~C() {
+        printf("~C()\n");
+    }
 
-    int value() const { return m_x; }
+    int value() const {
+        return m_x;
+    }
 
     int m_x;
     int m_y;
@@ -101,7 +118,7 @@ void test_self() {
     std::cout << opt2.has_value() << '\n'; // false
     try {
         opt2.value();
-    } catch ( const Marcus::BadOptionalAccess &e ) {
+    } catch (const Marcus::BadOptionalAccess &e) {
         std::cout << "opt2 exception: " << e.what() << '\n';
     }
     std::cout << opt2.value_or(0) << '\n'; // 0
@@ -110,7 +127,7 @@ void test_self() {
     std::cout << opt3.has_value() << '\n'; // false
     try {
         opt2.value();
-    } catch ( const Marcus::BadOptionalAccess &e ) {
+    } catch (const Marcus::BadOptionalAccess &e) {
         std::cout << "opt3 exception: " << e.what() << '\n';
     }
     std::cout << opt3.value_or(0) << '\n'; // 0
@@ -126,7 +143,7 @@ void test_std() {
     std::cout << opt2.has_value() << '\n'; // false
     try {
         opt2.value();
-    } catch ( std::bad_optional_access const & ) {
+    } catch (const std::bad_optional_access &) {
         std::cout << "opt2 exception ok\n";
     }
     std::cout << opt2.value_or(0) << '\n'; // 0
@@ -140,18 +157,24 @@ void test_std() {
 Marcus::optional<int> parseInt(std::string s) {
     try {
         return std::stoi(s);
-    } catch ( const std::invalid_argument & ) { return Marcus::nullopt; }
+    } catch (const std::invalid_argument &) {
+        return Marcus::nullopt;
+    }
 }
 
 Marcus::optional<int> getInt(std::istream &is) {
     std::string s;
     is >> s;
-    if ( !is.good() ) { return Marcus::nullopt; }
+    if (!is.good()) {
+        return Marcus::nullopt;
+    }
     return parseInt(s);
 }
 
 void test_emplace() {
-    while ( auto opt = getInt(std::cin) ) { std::cout << *opt << '\n'; }
+    while (auto opt = getInt(std::cin)) {
+        std::cout << *opt << '\n';
+    }
 
     Marcus::optional<C> opt;
 
@@ -183,11 +206,13 @@ void test_cmp() {
 
     o = -42;
     auto o2 = o.and_then([&](int i) -> Marcus::optional<int> {
-        if ( i < 0 ) { return Marcus::nullopt; }
+        if (i < 0) {
+            return Marcus::nullopt;
+        }
         return i + 1;
     });
 
-    if ( o2 ) {
+    if (o2) {
         std::cout << *o2 << '\n';
     } else {
         std::cout << "nullopt\n";
@@ -196,7 +221,7 @@ void test_cmp() {
     o = -42;
     std::unique_ptr<int> up = std::make_unique<int>();
     auto o3 = o.transform([up = std::move(up)](int i) -> int { return i + 1; });
-    if ( o3 ) {
+    if (o3) {
         std::cout << o3.value() << '\n';
     } else {
         std::cout << "nullopt\n";
@@ -207,7 +232,7 @@ void test_cmp() {
         std::cout << "no value! \n";
         return 0;
     });
-    if ( o4 ) {
+    if (o4) {
         std::cout << o4.value() << '\n';
     } else {
         std::cout << "nullopt\n";
@@ -215,8 +240,8 @@ void test_cmp() {
 }
 
 void test_in_place() {
-    Marcus::optional<C> o1 = C(1, 2); // C(x,y) C(C const &)
-    o1.emplace(1, 2);                 // C(x,y)
+    Marcus::optional<C> o1 = C(1, 2);              // C(x,y) C(C const &)
+    o1.emplace(1, 2);                              // C(x,y)
 
     Marcus::optional<C> o2(Marcus::inPlace, 1, 2); // C(x,y)
     Marcus::optional<C> o3(C(1, 2));               // C(x,y) C(C const &)

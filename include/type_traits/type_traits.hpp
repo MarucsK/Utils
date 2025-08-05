@@ -10,9 +10,13 @@ struct integral_constant {
     using value_type = T;
     using type = integral_constant<T, v>;
 
-    constexpr operator value_type() const noexcept { return value; }
+    constexpr operator value_type() const noexcept {
+        return value;
+    }
 
-    constexpr value_type operator()() const noexcept { return value; }
+    constexpr value_type operator()() const noexcept {
+        return value;
+    }
 };
 
 using true_type = integral_constant<bool, true>;
@@ -219,10 +223,8 @@ template <typename T>
 inline constexpr bool is_rvalue_reference_v = is_rvalue_reference<T>::value;
 
 template <typename T>
-struct is_reference
-    : integral_constant<
-          bool,
-          is_lvalue_reference_v<T> || is_rvalue_reference_v<T>> {};
+struct is_reference : integral_constant<bool, is_lvalue_reference_v<T> ||
+                                                  is_rvalue_reference_v<T>> {};
 
 template <typename T>
 inline constexpr bool is_reference_v = is_reference<T>::value;
@@ -350,9 +352,8 @@ inline constexpr bool is_member_function_pointer_v =
 // is_member_object_pointer
 template <typename T>
 struct is_member_object_pointer
-    : integral_constant<
-          bool,
-          is_member_pointer_v<T> && !is_member_function_pointer_v<T>> {};
+    : integral_constant<bool, is_member_pointer_v<T> &&
+                                  !is_member_function_pointer_v<T>> {};
 
 template <typename T>
 inline constexpr bool is_member_object_pointer_v =
@@ -369,9 +370,8 @@ inline constexpr bool is_arithmetic_v = is_arithmetic<T>::value;
 // is_fundamental
 template <typename T>
 struct is_fundamental
-    : integral_constant<
-          bool,
-          is_arithmetic_v<T> || is_void_v<T> || is_null_pointer_v<T>> {};
+    : integral_constant<bool, is_arithmetic_v<T> || is_void_v<T> ||
+                                  is_null_pointer_v<T>> {};
 
 template <typename T>
 inline constexpr bool is_fundamental_v = is_fundamental<T>::value;
@@ -379,11 +379,9 @@ inline constexpr bool is_fundamental_v = is_fundamental<T>::value;
 // is_scalar
 template <typename T>
 struct is_scalar
-    : integral_constant<
-          bool,
-          is_arithmetic_v<
-              T> || is_pointer_v<T> || is_member_pointer_v<T> || is_null_pointer_v<T>> {
-};
+    : integral_constant<bool, is_arithmetic_v<T> || is_pointer_v<T> ||
+                                  is_member_pointer_v<T> ||
+                                  is_null_pointer_v<T>> {};
 
 template <typename T>
 inline constexpr bool is_scalar_v = is_scalar<T>::value;
@@ -594,13 +592,12 @@ using conditional_t = typename conditional<B, T, F>::type;
 // decay
 template <typename T>
 struct decay {
-  private:
+private:
     using U = remove_reference_t<T>;
 
-  public:
+public:
     using type = conditional_t<
-        is_array_v<U>,
-        add_pointer_t<remove_extent_t<U>>,
+        is_array_v<U>, add_pointer_t<remove_extent_t<U>>,
         conditional_t<is_function_v<U>, add_pointer_t<U>, remove_cv_t<U>>>;
 };
 

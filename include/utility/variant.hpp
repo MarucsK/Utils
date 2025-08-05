@@ -1,8 +1,8 @@
 #pragma once
 
 #include <algorithm>
-#include <type_traits>
 #include <functional>
+#include <type_traits>
 
 namespace Marcus {
 
@@ -18,7 +18,9 @@ struct BadVariantAccess : std::exception {
     BadVariantAccess() = default;
     virtual ~BadVariantAccess() = default;
 
-    const char *what() const noexcept override { return "BadVariantAccess"; }
+    const char *what() const noexcept override {
+        return "BadVariantAccess";
+    }
 };
 
 template <typename, typename>
@@ -29,7 +31,7 @@ struct variant_alternative;
 
 template <typename... _Ts>
 struct variant {
-  private:
+private:
     size_t _index;
 
     alignas(
@@ -92,9 +94,8 @@ struct variant {
     }
 
     template <typename Lambda>
-    using ConstVisitorFunction = std::common_type<
-        typename std::invoke_result<Lambda, const _Ts &>::type...>::
-        type (*)(const char *, Lambda &&);
+    using ConstVisitorFunction = std::common_type<typename std::invoke_result<
+        Lambda, const _Ts &>::type...>::type (*)(const char *, Lambda &&);
 
     // 返回一个函数指针数组，每个元素用于对 const Variant 调用 visit
     template <typename Lambda>
@@ -102,17 +103,15 @@ struct variant {
         static ConstVisitorFunction<Lambda> function_ptrs[sizeof...(_Ts)] = {
             [](const char *_union_p, Lambda &&lambda) ->
             typename std::invoke_result<Lambda, const _Ts &>::type {
-                std::invoke(
-                    std::forward<Lambda>(lambda),
-                    *reinterpret_cast<const _Ts *>(_union_p));
+                std::invoke(std::forward<Lambda>(lambda),
+                            *reinterpret_cast<const _Ts *>(_union_p));
             }...};
         return function_ptrs;
     }
 
     template <typename Lambda>
-    using VisitorFunction =
-        std::common_type<typename std::invoke_result<Lambda, _Ts &>::type...>::
-            type (*)(char *, Lambda &&);
+    using VisitorFunction = std::common_type<typename std::invoke_result<
+        Lambda, _Ts &>::type...>::type (*)(char *, Lambda &&);
 
     // 返回一个函数指针数组，每个元素用于对 非const Variant 调用 visit
     template <typename Lambda>
@@ -121,19 +120,17 @@ struct variant {
             [](char *_union_p, Lambda &&lambda)
                 -> std::common_type<
                     typename std::invoke_result<Lambda, _Ts &>::type...>::type {
-                return std::invoke(
-                    std::forward<Lambda>(lambda),
-                    *reinterpret_cast<_Ts *>(_union_p));
+                return std::invoke(std::forward<Lambda>(lambda),
+                                   *reinterpret_cast<_Ts *>(_union_p));
             }...};
         return function_ptrs;
     }
 
-  public:
+public:
     template <
         typename _T,
         typename std::enable_if<
-            std::disjunction<std::is_same<_T, _Ts>...>::value,
-            int>::type = 0>
+            std::disjunction<std::is_same<_T, _Ts>...>::value, int>::type = 0>
     variant(_T __value) : _index(variant_index<variant, _T>::value) {
         _T *__p = reinterpret_cast<_T *>(_union);
         new (__p) _T(__value);
@@ -163,13 +160,15 @@ struct variant {
             std::forward<Args>(args)...);
     }
 
-    ~variant() noexcept { destructors_table()[index()](_union); }
+    ~variant() noexcept {
+        destructors_table()[index()](_union);
+    }
 
     template <typename Lambda>
     std::common_type<typename std::invoke_result<Lambda, _Ts &>::type...>::type
     visit(Lambda &&lambda) {
-        return visitors_table<Lambda>()[index()](
-            _union, std::forward<Lambda>(lambda));
+        return visitors_table<Lambda>()[index()](_union,
+                                                 std::forward<Lambda>(lambda));
     }
 
     template <typename Lambda>
@@ -180,7 +179,9 @@ struct variant {
             _union, std::forward<Lambda>(lambda));
     }
 
-    constexpr size_t index() const noexcept { return _index; }
+    constexpr size_t index() const noexcept {
+        return _index;
+    }
 
     template <typename T>
     constexpr bool holds_alternative() const noexcept {
@@ -190,7 +191,9 @@ struct variant {
     template <size_t I>
     typename variant_alternative<variant, I>::type &get() {
         static_assert(I < sizeof...(_Ts), "I out of range!");
-        if ( _index != I ) { throw BadVariantAccess(); }
+        if (_index != I) {
+            throw BadVariantAccess();
+        }
         return *reinterpret_cast<
             typename variant_alternative<variant, I>::type *>(_union);
     }
@@ -203,7 +206,9 @@ struct variant {
     template <size_t I>
     const typename variant_alternative<variant, I>::type &get() const {
         static_assert(I < sizeof...(_Ts), "I out of range!");
-        if ( _index != I ) { throw BadVariantAccess(); }
+        if (_index != I) {
+            throw BadVariantAccess();
+        }
         return *reinterpret_cast<
             const typename variant_alternative<variant, I>::type *>(_union);
     }
@@ -216,7 +221,9 @@ struct variant {
     template <size_t I>
     typename variant_alternative<variant, I>::type *get_if() {
         static_assert(I < sizeof...(_Ts), "I out of range");
-        if ( _index != I ) { return nullptr; }
+        if (_index != I) {
+            return nullptr;
+        }
         return reinterpret_cast<
             typename variant_alternative<variant, I>::type *>(_union);
     }
@@ -229,7 +236,9 @@ struct variant {
     template <size_t I>
     const typename variant_alternative<variant, I>::type *get_if() const {
         static_assert(I < sizeof...(_Ts), "I out of range");
-        if ( _index != I ) { return nullptr; }
+        if (_index != I) {
+            return nullptr;
+        }
         return reinterpret_cast<
             const typename variant_alternative<variant, I>::type *>(_union);
     }

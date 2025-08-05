@@ -1,10 +1,9 @@
 #pragma once
 
-#include <memory>
+#include <core/_common.hpp>
 #include <initializer_list>
 #include <limits>
-
-#include <core/_common.hpp>
+#include <memory>
 
 namespace Marcus {
 
@@ -16,6 +15,7 @@ struct ListBaseNode {
     inline T &value();
     inline const T &value() const;
 };
+
 template <typename T>
 struct ListValueNode : ListBaseNode<T> {
     union {
@@ -40,11 +40,11 @@ struct list {
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
     using pointer = T *;
-    using const_pointer = T const *;
+    using const_pointer = const T *;
     using reference = T &;
-    using const_reference = T const &;
+    using const_reference = const T &;
 
-  private:
+private:
     using ListNode = ListBaseNode<T>;
     /*
     List 存储的是 T 类型的元素，但实际在内存中分配和管理的是 ListValueNode<T>
@@ -80,7 +80,7 @@ struct list {
             allocNode, static_cast<ListValueNode<T> *>(node), 1);
     }
 
-  public:
+public:
     list() noexcept {
         _size = 0;
         _dummy._prev = _dummy._next = &_dummy;
@@ -105,7 +105,7 @@ struct list {
         _uninit_move_assign(std::move(other));
     }
 
-  private:
+private:
     void _uninit_move_assign(list &&other) {
         auto prev = other._dummy._prev;
         auto next = other._dummy._next;
@@ -117,7 +117,7 @@ struct list {
         other._size = 0;
     }
 
-  public:
+public:
     list(const list &other) : _alloc(other._alloc) {
         _uninit_assign(other.cbegin(), other.cend());
     }
@@ -126,17 +126,29 @@ struct list {
         _uninit_assign(other.cbegin(), other.cend());
     }
 
-    list &operator=(const list &other) { assign(other.cbegin(), other.cend()); }
+    list &operator=(const list &other) {
+        assign(other.cbegin(), other.cend());
+    }
 
-    bool empty() const noexcept { return _dummy._next == &_dummy; }
+    bool empty() const noexcept {
+        return _dummy._next == &_dummy;
+    }
 
-    T &front() noexcept { return _dummy._next->value(); }
+    T &front() noexcept {
+        return _dummy._next->value();
+    }
 
-    T &back() noexcept { return _dummy._prev->value(); }
+    T &back() noexcept {
+        return _dummy._prev->value();
+    }
 
-    const T &front() const noexcept { return _dummy._next->value(); }
+    const T &front() const noexcept {
+        return _dummy._next->value();
+    }
 
-    const T &back() const noexcept { return _dummy._prev->value(); }
+    const T &back() const noexcept {
+        return _dummy._prev->value();
+    }
 
     explicit list(size_t n, const Alloc &alloc = Alloc()) : _alloc(alloc) {
         _uninit_assign(n);
@@ -156,14 +168,16 @@ struct list {
     list(std::initializer_list<T> _ilist, const Alloc &alloc = Alloc())
         : list(_ilist.begin(), _ilist.end(), alloc) {}
 
-    list &operator=(std::initializer_list<T> _ilist) { assign(_ilist); }
+    list &operator=(std::initializer_list<T> _ilist) {
+        assign(_ilist);
+    }
 
-  private:
+private:
     template <std::input_iterator InputIt>
     void _uninit_assign(InputIt first, InputIt last) {
         _size = 0;
         ListNode *pre = &_dummy;
-        while ( first != last ) {
+        while (first != last) {
             ListNode *node = newNode();
             pre->_next = node;
             node->_prev = pre;
@@ -180,7 +194,7 @@ struct list {
         requires std::constructible_from<value_type, Args...>
     void _uninit_assign(size_t n, Args &&...args) {
         ListNode *pre = &_dummy;
-        for ( size_t i = 0; i < n; ++i ) {
+        for (size_t i = 0; i < n; ++i) {
             ListNode *node = newNode();
             pre->_next = node;
             node->_prev = pre;
@@ -192,8 +206,10 @@ struct list {
         _size = n;
     }
 
-  public:
-    std::size_t size() const noexcept { return _size; }
+public:
+    std::size_t size() const noexcept {
+        return _size;
+    }
 
     constexpr std::size_t max_size() const noexcept {
         return std::numeric_limits<std::size_t>::max();
@@ -215,13 +231,21 @@ struct list {
         _uninit_assign(n, val);
     }
 
-    void push_back(const T &val) { emplace_back(val); }
+    void push_back(const T &val) {
+        emplace_back(val);
+    }
 
-    void push_back(T &&val) { emplace_back(std::move(val)); }
+    void push_back(T &&val) {
+        emplace_back(std::move(val));
+    }
 
-    void push_front(const T &val) { emplace_front(val); }
+    void push_front(const T &val) {
+        emplace_front(val);
+    }
 
-    void push_front(T &&val) { emplace_front(std::move(val)); }
+    void push_front(T &&val) {
+        emplace_front(std::move(val));
+    }
 
     template <typename... Args>
     T &emplace_back(Args &&...args) {
@@ -249,11 +273,13 @@ struct list {
         return node->value();
     }
 
-    ~list() noexcept { clear(); }
+    ~list() noexcept {
+        clear();
+    }
 
     void clear() noexcept {
         ListNode *cur = _dummy._next;
-        while ( cur != &_dummy ) {
+        while (cur != &_dummy) {
             std::destroy_at(&cur->value());
             auto nxt = cur->_next;
             deleteNode(cur);
@@ -270,14 +296,14 @@ struct list {
         using pointer = T *;
         using reference = T &;
 
-      private:
+    private:
         ListNode *_cur;
 
         friend list;
 
         explicit iterator(ListNode *cur) noexcept : _cur(cur) {}
 
-      public:
+    public:
         iterator() = default;
 
         iterator &operator++() noexcept {
@@ -302,7 +328,9 @@ struct list {
             return tmp;
         }
 
-        T &operator*() const noexcept { return _cur->value(); }
+        T &operator*() const noexcept {
+            return _cur->value();
+        }
 
         bool operator!=(const iterator &other) const noexcept {
             return _cur != other._cur;
@@ -317,17 +345,17 @@ struct list {
         using iterator_category = std::bidirectional_iterator_tag;
         using value_type = T;
         using difference_type = ptrdiff_t;
-        using pointer = T const *;
-        using reference = T const &;
+        using pointer = const T *;
+        using reference = const T &;
 
-      private:
+    private:
         const ListNode *_cur;
 
         friend list;
 
         explicit const_iterator(const ListNode *cur) noexcept : _cur(cur) {}
 
-      public:
+    public:
         const_iterator() = default;
 
         const_iterator(iterator other) noexcept : _cur(other._cur) {}
@@ -358,7 +386,9 @@ struct list {
             return tmp;
         }
 
-        const T &operator*() const noexcept { return _cur->value(); }
+        const T &operator*() const noexcept {
+            return _cur->value();
+        }
 
         bool operator!=(const const_iterator &other) const noexcept {
             return _cur != other._cur;
@@ -369,19 +399,29 @@ struct list {
         }
     };
 
-    iterator begin() noexcept { return iterator{_dummy._next}; }
+    iterator begin() noexcept {
+        return iterator{_dummy._next};
+    }
 
-    iterator end() noexcept { return iterator{&_dummy}; }
+    iterator end() noexcept {
+        return iterator{&_dummy};
+    }
 
     const_iterator cbegin() const noexcept {
         return const_iterator{_dummy._next};
     }
 
-    const_iterator cend() const noexcept { return const_iterator{&_dummy}; }
+    const_iterator cend() const noexcept {
+        return const_iterator{&_dummy};
+    }
 
-    const_iterator begin() const noexcept { return cbegin(); }
+    const_iterator begin() const noexcept {
+        return cbegin();
+    }
 
-    const_iterator end() const noexcept { return cend(); }
+    const_iterator end() const noexcept {
+        return cend();
+    }
 
     using reverse_iterator = std::reverse_iterator<iterator>;
     using reverse_const_iterator = std::reverse_iterator<const_iterator>;
@@ -402,9 +442,13 @@ struct list {
         return std::make_reverse_iterator(cbegin());
     }
 
-    reverse_const_iterator rbegin() const noexcept { return crbegin(); }
+    reverse_const_iterator rbegin() const noexcept {
+        return crbegin();
+    }
 
-    reverse_const_iterator rend() const noexcept { return crend(); }
+    reverse_const_iterator rend() const noexcept {
+        return crend();
+    }
 
     iterator erase(const_iterator pos) noexcept {
         ListNode *node = const_cast<ListNode *>(pos._cur);
@@ -419,20 +463,26 @@ struct list {
     }
 
     iterator erase(const_iterator first, const_iterator last) noexcept {
-        while ( first != last ) { first = erase(first); }
+        while (first != last) {
+            first = erase(first);
+        }
         return iterator(first);
     }
 
-    void pop_front() noexcept { erase(begin()); }
+    void pop_front() noexcept {
+        erase(begin());
+    }
 
-    void pop_back() noexcept { erase(std::prev(end())); }
+    void pop_back() noexcept {
+        erase(std::prev(end()));
+    }
 
     std::size_t remove(const T &val) noexcept {
         auto first = begin();
         auto last = end();
         std::size_t count = 0;
-        while ( first != last ) {
-            if ( *first == val ) {
+        while (first != last) {
+            if (*first == val) {
                 first = erase(first);
                 ++count;
             } else {
@@ -447,8 +497,8 @@ struct list {
         auto first = begin();
         auto last = end();
         std::size_t count = 0;
-        while ( first != last ) {
-            if ( pred(*first) ) {
+        while (first != last) {
+            if (pred(*first)) {
                 first = erase(first);
                 ++count;
             } else {
@@ -483,9 +533,9 @@ struct list {
     iterator insert(const_iterator pos, std::size_t n, const T &val) {
         auto orig = pos;
         bool has_orig = false;
-        while ( n ) {
+        while (n) {
             pos = emplace(pos, val);
-            if ( !has_orig ) {
+            if (!has_orig) {
                 has_orig = true;
                 orig = pos;
             }
@@ -500,9 +550,9 @@ struct list {
     iterator insert(const_iterator pos, InputIt first, InputIt last) {
         auto orig = pos;
         bool has_orig = false;
-        while ( first != last ) {
+        while (first != last) {
             pos = emplace(pos, *first);
-            if ( !has_orig ) {
+            if (!has_orig) {
                 has_orig = true;
                 orig = pos;
             }
@@ -517,12 +567,13 @@ struct list {
     }
 
     void splice(const_iterator pos, list &&other) {
-        insert(
-            pos, std::make_move_iterator(other.begin()),
-            std::make_move_iterator(other.end()));
+        insert(pos, std::make_move_iterator(other.begin()),
+               std::make_move_iterator(other.end()));
     }
 
-    Alloc get_allocator() const noexcept { return _alloc; }
+    Alloc get_allocator() const noexcept {
+        return _alloc;
+    }
 
     _LIBPENGCXX_DEFINE_COMPARISON(list);
 };

@@ -1,6 +1,6 @@
 #include <iostream>
-#include <type_traits>
 #include <type_traits/type_traits.hpp>
+#include <type_traits>
 
 using namespace Marcus;
 
@@ -18,8 +18,8 @@ void test_constexpr_bool(const char *name, bool value, bool expected) {
 
 void type_traits_test() {
     // integral_constant, true_type, false_type
-    test_constexpr_bool(
-        "integral_constant", integral_constant<int, 3>::value == 3, true);
+    test_constexpr_bool("integral_constant",
+                        integral_constant<int, 3>::value == 3, true);
     test_constexpr_bool("true_type", true_type::value, true);
     test_constexpr_bool("false_type", false_type::value, false);
 
@@ -31,9 +31,8 @@ void type_traits_test() {
     test_constexpr_bool("is_void<int>", is_void_v<int>, false);
 
     // is_null_pointer
-    test_constexpr_bool(
-        "is_null_pointer<std::nullptr_t>", is_null_pointer_v<std::nullptr_t>,
-        true);
+    test_constexpr_bool("is_null_pointer<std::nullptr_t>",
+                        is_null_pointer_v<std::nullptr_t>, true);
     test_constexpr_bool("is_null_pointer<int>", is_null_pointer_v<int>, false);
 
     // remove_const, remove_volatile, remove_cv
@@ -46,10 +45,10 @@ void type_traits_test() {
     test_constexpr_bool("is_integral<float>", is_integral_v<float>, false);
 
     // is_floating_point
-    test_constexpr_bool(
-        "is_floating_point<float>", is_floating_point_v<float>, true);
-    test_constexpr_bool(
-        "is_floating_point<int>", is_floating_point_v<int>, false);
+    test_constexpr_bool("is_floating_point<float>", is_floating_point_v<float>,
+                        true);
+    test_constexpr_bool("is_floating_point<int>", is_floating_point_v<int>,
+                        false);
 
     // is_array
     test_constexpr_bool("is_array<int[]>", is_array_v<int[]>, true);
@@ -61,10 +60,10 @@ void type_traits_test() {
     test_constexpr_bool("is_pointer<int>", is_pointer_v<int>, false);
 
     // is_lvalue_reference, is_rvalue_reference, is_reference
-    test_constexpr_bool(
-        "is_lvalue_reference<int&>", is_lvalue_reference_v<int &>, true);
-    test_constexpr_bool(
-        "is_rvalue_reference<int&&>", is_rvalue_reference_v<int &&>, true);
+    test_constexpr_bool("is_lvalue_reference<int&>",
+                        is_lvalue_reference_v<int &>, true);
+    test_constexpr_bool("is_rvalue_reference<int&&>",
+                        is_rvalue_reference_v<int &&>, true);
     test_constexpr_bool("is_reference<int&>", is_reference_v<int &>, true);
     test_constexpr_bool("is_reference<int>", is_reference_v<int>, false);
 
@@ -79,16 +78,16 @@ void type_traits_test() {
     // is_member_pointer, is_member_function_pointer, is_member_object_pointer
     struct S {
         int x;
+
         void f() {}
     };
-    test_constexpr_bool(
-        "is_member_pointer<int S::*>", is_member_pointer_v<int S::*>, true);
-    test_constexpr_bool(
-        "is_member_function_pointer<void (S::*)()>",
-        is_member_function_pointer_v<void (S::*)()>, true);
-    test_constexpr_bool(
-        "is_member_object_pointer<int S::*>",
-        is_member_object_pointer_v<int S::*>, true);
+
+    test_constexpr_bool("is_member_pointer<int S::*>",
+                        is_member_pointer_v<int S::*>, true);
+    test_constexpr_bool("is_member_function_pointer<void (S::*)()>",
+                        is_member_function_pointer_v<void (S::*)()>, true);
+    test_constexpr_bool("is_member_object_pointer<int S::*>",
+                        is_member_object_pointer_v<int S::*>, true);
 
     // is_arithmetic, is_fundamental, is_scalar, is_object, is_compound
     test_constexpr_bool("is_arithmetic<int>", is_arithmetic_v<int>, true);
@@ -100,8 +99,8 @@ void type_traits_test() {
 
     // is_const, is_volatile
     test_constexpr_bool("is_const<const int>", is_const_v<const int>, true);
-    test_constexpr_bool(
-        "is_volatile<volatile int>", is_volatile_v<volatile int>, true);
+    test_constexpr_bool("is_volatile<volatile int>",
+                        is_volatile_v<volatile int>, true);
 
     // add_const, add_volatile, add_pointer, remove_pointer
     test_is_same<add_const_t<int>, const int>(true);
@@ -127,12 +126,10 @@ void type_traits_test() {
     test_is_same<decay_t<void(int)>, void (*)(int)>(true);
 
     // conjunction, disjunction, negation
-    test_constexpr_bool(
-        "conjunction<true_type, true_type>",
-        conjunction_v<true_type, true_type>, true);
-    test_constexpr_bool(
-        "disjunction<false_type, true_type>",
-        disjunction_v<false_type, true_type>, true);
+    test_constexpr_bool("conjunction<true_type, true_type>",
+                        conjunction_v<true_type, true_type>, true);
+    test_constexpr_bool("disjunction<false_type, true_type>",
+                        disjunction_v<false_type, true_type>, true);
     test_constexpr_bool("negation<true_type>", negation_v<true_type>, false);
 
     // enable_if

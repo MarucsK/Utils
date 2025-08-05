@@ -1,17 +1,18 @@
+#include <containers/map.hpp>
 #include <iostream>
 #include <string>
-
-#include <containers/map.hpp>
 
 int main() {
     std::cout << std::boolalpha;
     Marcus::map<std::string, int> table;
     table["delay"] = 12;
-    if ( !table.contains("delay") ) { table["delay"] = 32; }
+    if (!table.contains("delay")) {
+        table["delay"] = 32;
+    }
 
     table["timeout"] = 42;
 
-    for ( auto it = table.begin(); it != table.end(); ++it ) {
+    for (auto it = table.begin(); it != table.end(); ++it) {
         std::cout << it->first << "=" << it->second << std::endl;
     }
 

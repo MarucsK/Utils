@@ -1,7 +1,6 @@
+#include <containers/set.hpp>
 #include <cstdio>
 #include <iostream>
-
-#include <containers/set.hpp>
 
 int main() {
     Marcus::multiset<int> table;
@@ -14,15 +13,19 @@ int main() {
     table.insert(3);
     table.emplace(-5);
 
-    for ( auto it = table.begin(); it != table.end(); ++it ) {
+    for (auto it = table.begin(); it != table.end(); ++it) {
         std::cout << *it << std::endl;
     }
 
     auto it = table.lower_bound(2);
-    while ( it != table.upper_bound(2) ) { std::cout << *it++ << std::endl; }
+    while (it != table.upper_bound(2)) {
+        std::cout << *it++ << std::endl;
+    }
 
     table.erase(2);
-    for ( auto const &s : table ) { std::cout << s << std::endl; }
+    for (const auto &s: table) {
+        std::cout << s << std::endl;
+    }
 
     Marcus::set<int> s;
     s.insert(1);
@@ -36,7 +39,7 @@ int main() {
     printf("find 2 = %d\n", s.find(2) != s.end()); // 0
     printf("find 4 = %d\n", s.find(4) != s.end()); // 1
 
-    for ( auto it = s.begin(); it != s.end(); ++it ) {
+    for (auto it = s.begin(); it != s.end(); ++it) {
         std::cout << *it << std::endl;
     }
 
@@ -45,5 +48,7 @@ int main() {
 
     printf("min = %d\n", *s.begin());
     printf("max = %d\n", *s.rbegin());
-    for ( int i : s ) { printf("%d\n", i); }
+    for (int i: s) {
+        printf("%d\n", i);
+    }
 }

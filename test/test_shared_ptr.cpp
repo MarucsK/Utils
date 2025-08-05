@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <memory/shared_ptr.hpp>
 
 struct Student : Marcus::enable_shared_from_this<Student> {
@@ -12,9 +11,13 @@ struct Student : Marcus::enable_shared_from_this<Student> {
 
     Student(Student &&) = delete;
 
-    void func() { std::cout << (void *)shared_from_this().get() << '\n'; }
+    void func() {
+        std::cout << (void *)shared_from_this().get() << '\n';
+    }
 
-    ~Student() { std::cout << "Student 析构" << std::endl; }
+    ~Student() {
+        std::cout << "Student 析构" << std::endl;
+    }
 };
 
 struct StudentDerived : Student {
@@ -23,7 +26,9 @@ struct StudentDerived : Student {
         std::cout << "StudentDerived 构造" << std::endl;
     }
 
-    ~StudentDerived() { std::cout << "StudentDerived 析构" << std::endl; }
+    ~StudentDerived() {
+        std::cout << "StudentDerived 析构" << std::endl;
+    }
 };
 
 int main() {
@@ -35,8 +40,8 @@ int main() {
 
     Marcus::shared_ptr<Student> p = Marcus::make_shared<Student>("Marcus", 23);
     Marcus::shared_ptr<Student> p2(new Student("Marcus", 23));
-    Marcus::shared_ptr<Student> p3(
-        new Student("Marcus", 23), [](Student *p) { delete p; });
+    Marcus::shared_ptr<Student> p3(new Student("Marcus", 23),
+                                   [](Student *p) { delete p; });
     Student *raw_p = p.get();
     std::cout << raw_p->name << raw_p->age << std::endl;
     Marcus::shared_ptr<Student> p4 = p;

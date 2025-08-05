@@ -1,8 +1,7 @@
 #include <cstdio>
-#include <vector>
 #include <iostream>
-
 #include <memory/unique_ptr.hpp>
+#include <vector>
 
 struct MyClass {
     int a, b, c;
@@ -18,7 +17,9 @@ struct Dog : Animal {
 
     Dog(int age_) : age(age_) {}
 
-    virtual void speak() { printf("Bark! I'm %d Year Old!\n", age); }
+    virtual void speak() {
+        printf("Bark! I'm %d Year Old!\n", age);
+    }
 };
 
 struct Cat : Animal {
@@ -26,7 +27,9 @@ struct Cat : Animal {
 
     Cat(int &age_) : age(age_) {}
 
-    virtual void speak() { printf("Meow! I'm %d Year Old!\n", age); }
+    virtual void speak() {
+        printf("Meow! I'm %d Year Old!\n", age);
+    }
 };
 
 int main() {
@@ -34,9 +37,13 @@ int main() {
     int age = 3;
     zoo.push_back(Marcus::make_unique<Cat>(age));
     zoo.push_back(Marcus::make_unique<Dog>(age));
-    for ( auto const &a : zoo ) { a->speak(); }
+    for (const auto &a: zoo) {
+        a->speak();
+    }
     age++;
-    for ( auto const &a : zoo ) { a->speak(); }
+    for (const auto &a: zoo) {
+        a->speak();
+    }
 
     auto p = Marcus::make_unique<int[]>(5);
     // auto p2 = Marcus::make_unique<int[5]>();

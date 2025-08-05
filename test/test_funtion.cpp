@@ -1,6 +1,5 @@
 #include <cstdio>
 #include <iostream>
-
 #include <utility/functional.hpp>
 
 void func_hello(int i) {
@@ -11,11 +10,12 @@ struct func_printnum_t {
     void operator()(int i) const {
         printf("#%d Numbers are: %d, %d\n", i, x, y);
     }
+
     int x;
     int y;
 };
 
-void repeattwice(Marcus::Function<void(int)> const &func) {
+void repeattwice(const Marcus::Function<void(int)> &func) {
     func(1);
     func(2);
 }
