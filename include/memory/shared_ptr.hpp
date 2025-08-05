@@ -10,10 +10,14 @@
 
 namespace Marcus {
 
+template <typename>
+struct weak_ptr;
+
 struct _SpCounter {
     std::atomic<long> _M_refcnt;
+    std::atomic<long> _M_weak_refcnt;
 
-    _SpCounter() noexcept : _M_refcnt(1) {}
+    _SpCounter() noexcept : _M_refcnt(1), _M_weak_refcnt(1) {}
 
     _SpCounter(_SpCounter &&) = delete;
 
@@ -23,6 +27,17 @@ struct _SpCounter {
 
     void _M_decref() noexcept {
         if (_M_refcnt.fetch_sub(1, std::memory_order_relaxed) == 1) {
+            _M_destroy();
+            _M_decref_weak();
+        }
+    }
+
+    void _M_incref_weak() noexcept {
+        _M_weak_refcnt.fetch_add(1, std::memory_order_relaxed);
+    }
+
+    void _M_decref_weak() noexcept {
+        if (_M_weak_refcnt.fetch_sub(1, std::memory_order_acq_rel) == 1) {
             delete this;
         }
     }
@@ -30,6 +45,24 @@ struct _SpCounter {
     long _M_cntref() const noexcept {
         return _M_refcnt.load(std::memory_order_relaxed);
     }
+
+    long _M_cntweakref() const noexcept {
+        return _M_weak_refcnt.load(std::memory_order_relaxed);
+    }
+
+    bool _M_try_lock() noexcept {
+        long __count = _M_refcnt.load(std::memory_order_relaxed);
+        while (__count != 0) {
+            if (_M_refcnt.compare_exchange_weak(__count, __count + 1,
+                                                std::memory_order_acq_rel,
+                                                std::memory_order_relaxed)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    virtual void _M_destroy() noexcept = 0;
 
     virtual ~_SpCounter() = default;
 };
@@ -46,7 +79,7 @@ struct _SpCounterImpl final : _SpCounter {
         : _M_ptr(__ptr),
           _M_deleter(std::move(__deleter)) {}
 
-    ~_SpCounterImpl() noexcept override {
+    void _M_destroy() noexcept override {
         _M_deleter(_M_ptr);
     }
 };
@@ -64,7 +97,7 @@ struct _SpCounterImplFused final : _SpCounter {
           _M_mem(__mem),
           _M_deleter(std::move(__deleter)) {}
 
-    ~_SpCounterImplFused() noexcept {
+    void _M_destroy() noexcept override {
         _M_deleter(_M_ptr);
     }
 
@@ -87,6 +120,9 @@ private:
 
     template <typename>
     friend struct shared_ptr;
+
+    template <typename>
+    friend struct weak_ptr;
 
     explicit shared_ptr(_Tp *__ptr, _SpCounter *__owner) noexcept
         : _M_ptr(__ptr),
@@ -510,6 +546,26 @@ shared_ptr<_Tp> make_shared_for_overwrite(std::size_t __len) {
         delete[] __p;
         throw;
     }
+}
+
+template <class _Tp>
+bool operator==(const shared_ptr<_Tp> &__a, std::nullptr_t) noexcept {
+    return !__a;
+}
+
+template <class _Tp>
+bool operator==(std::nullptr_t, const shared_ptr<_Tp> &__a) noexcept {
+    return !__a;
+}
+
+template <class _Tp>
+bool operator!=(const shared_ptr<_Tp> &__a, std::nullptr_t) noexcept {
+    return (bool)__a;
+}
+
+template <class _Tp>
+bool operator!=(std::nullptr_t, const shared_ptr<_Tp> &__a) noexcept {
+    return (bool)__a;
 }
 
 // C++ 17
