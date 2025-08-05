@@ -397,58 +397,125 @@ struct shared_ptr<_Tp[]> : shared_ptr<_Tp> {
     }
 };
 
+// template <typename _Tp>
+// struct enable_shared_from_this {
+// private:
+//     _SpCounter *_M_owner;
+
+// protected:
+//     enable_shared_from_this() noexcept : _M_owner(nullptr) {}
+
+//     shared_ptr<_Tp> shared_from_this() {
+//         static_assert(std::is_base_of_v<enable_shared_from_this, _Tp>,
+//                       "must be derived class");
+//         if (!_M_owner) {
+//             throw std::bad_weak_ptr();
+//         }
+//         _M_owner->_M_incref();
+//         return _S_makeSharedFused(static_cast<_Tp *>(this), _M_owner);
+//     }
+
+//     shared_ptr<const _Tp> shared_from_this() const {
+//         static_assert(std::is_base_of_v<enable_shared_from_this, _Tp>,
+//                       "must be derived class");
+//         if (!_M_owner) {
+//             throw std::bad_weak_ptr();
+//         }
+//         _M_owner->_M_incref();
+//         return _S_makeSharedFused(static_cast<const _Tp *>(this), _M_owner);
+//     }
+
+//     template <typename _Up>
+//     inline friend void
+//     _S_setEnableSharedFromThisOwner(enable_shared_from_this<_Up> *__ptr,
+//                                     _SpCounter *__owner);
+// };
+
+// template <typename _Up>
+// inline void _S_setEnableSharedFromThisOwner(enable_shared_from_this<_Up>
+// *__ptr,
+//                                             _SpCounter *__owner) {
+//     __ptr->_M_owner = __owner;
+// }
+
+// template <typename _Tp,
+//           std::enable_if_t<std::is_base_of_v<enable_shared_from_this<_Tp>,
+//           _Tp>,
+//                            int> = 0>
+// void _S_setupEnableSharedFromThis(_Tp *__ptr, _SpCounter *__owner) {
+//     _S_setEnableSharedFromThisOwner(
+//         static_cast<enable_shared_from_this<_Tp> *>(__ptr), __owner);
+// }
+
 template <typename _Tp>
 struct enable_shared_from_this {
 private:
-    _SpCounter *_M_owner;
+    mutable weak_ptr<_Tp> _M_weak_this;
 
 protected:
-    enable_shared_from_this() noexcept : _M_owner(nullptr) {}
+    constexpr enable_shared_from_this() noexcept {}
 
+    enable_shared_from_this(const enable_shared_from_this &) noexcept {}
+
+    enable_shared_from_this &
+    operator=(const enable_shared_from_this &) noexcept {
+        return *this;
+    }
+
+    ~enable_shared_from_this() {}
+
+public:
     shared_ptr<_Tp> shared_from_this() {
-        static_assert(std::is_base_of_v<enable_shared_from_this, _Tp>,
-                      "must be derived class");
-        if (!_M_owner) {
+        auto sp = _M_weak_this.lock();
+        if (!sp) {
             throw std::bad_weak_ptr();
         }
-        _M_owner->_M_incref();
-        return _S_makeSharedFused(static_cast<_Tp *>(this), _M_owner);
+        return sp;
     }
 
     shared_ptr<const _Tp> shared_from_this() const {
-        static_assert(std::is_base_of_v<enable_shared_from_this, _Tp>,
-                      "must be derived class");
-        if (!_M_owner) {
+        auto sp = _M_weak_this.lock();
+        if (!sp) {
             throw std::bad_weak_ptr();
         }
-        _M_owner->_M_incref();
-        return _S_makeSharedFused(static_cast<const _Tp *>(this), _M_owner);
+        return sp;
     }
 
-    template <typename _Up>
-    inline friend void
-    _S_setEnableSharedFromThisOwner(enable_shared_from_this<_Up> *__ptr,
-                                    _SpCounter *__owner);
-};
+    // C++17 weak_from_this
+    weak_ptr<_Tp> weak_from_this() noexcept {
+        return _M_weak_this;
+    }
 
-template <typename _Up>
-inline void _S_setEnableSharedFromThisOwner(enable_shared_from_this<_Up> *__ptr,
-                                            _SpCounter *__owner) {
-    __ptr->_M_owner = __owner;
-}
+    weak_ptr<const _Tp> weak_from_this() const noexcept {
+        return _M_weak_this;
+    }
+
+    template <typename _Up,
+              std::enable_if_t<
+                  std::is_base_of_v<enable_shared_from_this<_Up>, _Up>, int>>
+    friend void _S_setupEnableSharedFromThis(_Up *__ptr, _SpCounter *__owner);
+};
 
 template <typename _Tp,
           std::enable_if_t<std::is_base_of_v<enable_shared_from_this<_Tp>, _Tp>,
                            int> = 0>
 void _S_setupEnableSharedFromThis(_Tp *__ptr, _SpCounter *__owner) {
-    _S_setEnableSharedFromThisOwner(
-        static_cast<enable_shared_from_this<_Tp> *>(__ptr), __owner);
+    if (__ptr) {
+        auto *__esft = static_cast<enable_shared_from_this<_Tp> *>(__ptr);
+        if (__esft->_M_weak_this.expired()) {
+            __esft->_M_weak_this._M_ptr = __ptr;
+            __esft->_M_weak_this._M_owner = __owner;
+            __owner->_M_incref_weak();
+        }
+    }
 }
 
 template <typename _Tp,
           std::enable_if_t<
               !std::is_base_of_v<enable_shared_from_this<_Tp>, _Tp>, int> = 0>
 void _S_setupEnableSharedFromThis(_Tp *, _SpCounter *) {}
+
+// ------------------------------------------------------------------------------
 
 template <typename _Tp, typename... _Args,
           std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> =
@@ -593,4 +660,187 @@ shared_ptr<_Tp> dynamic_pointer_cast(const shared_ptr<_Up> &__ptr) {
         return nullptr;
     }
 }
+
+// ----------------------------------------------------------------------------
+// weak_ptr
+// ----------------------------------------------------------------------------
+template <typename _Tp>
+struct weak_ptr {
+private:
+    _Tp *_M_ptr;
+    _SpCounter *_M_owner;
+
+    template <typename>
+    friend struct weak_ptr;
+
+    template <typename>
+    friend struct shared_ptr;
+
+    template <typename _Up,
+              std::enable_if_t<
+                  std::is_base_of_v<enable_shared_from_this<_Up>, _Up>, int>>
+    friend void Marcus::_S_setupEnableSharedFromThis(_Up *__ptr,
+                                                     _SpCounter *__owner);
+
+public:
+    using element_type = _Tp;
+
+    constexpr weak_ptr() noexcept : _M_ptr(nullptr), _M_owner(nullptr) {}
+
+    weak_ptr(const weak_ptr &__other) noexcept
+        : _M_ptr(__other._M_ptr),
+          _M_owner(__other._M_owner) {
+        if (_M_owner) {
+            _M_owner->_M_incref_weak();
+        }
+    }
+
+    template <typename _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    weak_ptr(const weak_ptr<_Yp> &__other) noexcept
+        : _M_ptr(__other._M_ptr),
+          _M_owner(__other._M_owner) {
+        if (_M_owner) {
+            _M_owner->_M_incref_weak();
+        }
+    }
+
+    template <typename _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    weak_ptr(const shared_ptr<_Yp> &__other) noexcept
+        : _M_ptr(__other._M_ptr),
+          _M_owner(__other._M_owner) {
+        if (_M_owner) {
+            _M_owner->_M_incref_weak();
+        }
+    }
+
+    weak_ptr(weak_ptr &&__other) noexcept
+        : _M_ptr(__other._M_ptr),
+          _M_owner(__other._M_owner) {
+        __other._M_ptr = nullptr;
+        __other._M_owner = nullptr;
+    }
+
+    template <typename _Yp,
+              std::enable_if_t<std::is_convertible_v<_Yp *, _Tp *>, int> = 0>
+    weak_ptr(weak_ptr<_Yp> &&__other) noexcept
+        : _M_ptr(__other._M_ptr),
+          _M_owner(__other._M_owner) {
+        __other._M_ptr = nullptr;
+        __other._M_owner = nullptr;
+    }
+
+    ~weak_ptr() {
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+    }
+
+    weak_ptr &operator=(const weak_ptr &__other) noexcept {
+        if (this == &__other) {
+            return *this;
+        }
+        if (__other._M_owner) {
+            __other._M_owner->_M_incref_weak();
+        }
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = __other._M_ptr;
+        _M_owner = __other._M_owner;
+        return *this;
+    }
+
+    template <typename _Yp>
+    weak_ptr &operator=(const weak_ptr<_Yp> &__other) noexcept {
+        if (__other._M_owner) {
+            __other._M_owner->_M_incref_weak();
+        }
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = __other._M_ptr;
+        _M_owner = __other._M_owner;
+        return *this;
+    }
+
+    template <typename _Yp>
+    weak_ptr &operator=(const shared_ptr<_Yp> &__other) noexcept {
+        if (__other._M_owner) {
+            __other._M_owner->_M_incref_weak();
+        }
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = __other._M_ptr;
+        _M_owner = __other._M_owner;
+        return *this;
+    }
+
+    weak_ptr &operator=(weak_ptr &&__other) noexcept {
+        if (this == &__other) {
+            return *this;
+        }
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = __other._M_ptr;
+        _M_owner = __other._M_owner;
+        __other._M_ptr = nullptr;
+        __other._M_owner = nullptr;
+        return *this;
+    }
+
+    template <typename _Yp>
+    weak_ptr &operator=(weak_ptr<_Yp> &&__other) noexcept {
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = __other._M_ptr;
+        _M_owner = __other._M_owner;
+        __other._M_ptr = nullptr;
+        __other._M_owner = nullptr;
+        return *this;
+    }
+
+    void reset() noexcept {
+        if (_M_owner) {
+            _M_owner->_M_decref_weak();
+        }
+        _M_ptr = nullptr;
+        _M_owner = nullptr;
+    }
+
+    void swap(weak_ptr &__other) noexcept {
+        std::swap(_M_ptr, __other._M_ptr);
+        std::swap(_M_owner, __other._M_owner);
+    }
+
+    long use_count() const noexcept {
+        return _M_owner ? _M_owner->_M_cntref() : 0;
+    }
+
+    bool expired() const noexcept {
+        return use_count() == 0;
+    }
+
+    shared_ptr<_Tp> lock() const noexcept {
+        if (_M_owner && _M_owner->_M_try_lock()) {
+            return shared_ptr<_Tp>(_M_ptr, _M_owner);
+        }
+        return shared_ptr<_Tp>();
+    }
+
+    template <typename _Yp>
+    bool owner_before(const weak_ptr<_Yp> &__other) const noexcept {
+        return _M_owner < __other._M_owner;
+    }
+
+    template <typename _Yp>
+    bool owner_before(const shared_ptr<_Yp> &__other) const noexcept {
+        return _M_owner < __other._M_owner;
+    }
+};
+
 } // namespace Marcus
