@@ -11,6 +11,7 @@
 *   Smart Pointers:
     *   shared_ptr
     *   unique_ptr
+    *   weak_ptr
 
 *   Utilities:
     *   function
