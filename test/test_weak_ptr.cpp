@@ -1,6 +1,5 @@
 #include <iostream>
 #include <memory/shared_ptr.hpp>
-#include <memory/weak_ptr.hpp>
 #include <string>
 
 struct MyObject {
