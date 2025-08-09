@@ -276,6 +276,56 @@ struct is_function<_Res(_ArgTypes...) const volatile> : public true_type {};
 template <typename _Res, typename... _ArgTypes>
 struct is_function<_Res(_ArgTypes......) const volatile> : public true_type {};
 
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) const &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) const &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) volatile &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) volatile &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) const volatile &> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) const volatile &> : public true_type {
+};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) const &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) const &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) volatile &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) volatile &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes...) const volatile &&> : public true_type {};
+
+template <typename _Res, typename... _ArgTypes>
+struct is_function<_Res(_ArgTypes......) const volatile &&> : public true_type {
+};
+
 template <typename T>
 inline constexpr bool is_function_v = is_function<T>::value;
 
