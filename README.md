@@ -5,6 +5,7 @@
     *   array
     *   vector
     *   list
+    *   forward_list
     *   map
     *   set
 
