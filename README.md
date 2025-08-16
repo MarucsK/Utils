@@ -9,6 +9,9 @@
     *   map
     *   set
 
+*   Adapters
+    *   priority_queue
+
 *   Smart Pointers:
     *   shared_ptr
     *   unique_ptr
