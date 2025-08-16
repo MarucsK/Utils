@@ -5,7 +5,6 @@
 
 namespace Marcus {
 
-// 默认使用 delete 释放内存
 template <typename _Tp>
 struct DefaultDeleter {
     void operator()(_Tp *p) const {
@@ -130,7 +129,6 @@ public:
     }
 };
 
-// 数组特化版本
 template <typename _Tp, typename _Deleter>
 struct unique_ptr<_Tp[], _Deleter> : unique_ptr<_Tp, _Deleter> {
     using unique_ptr<_Tp, _Deleter>::unique_ptr;
@@ -141,9 +139,9 @@ struct unique_ptr<_Tp[], _Deleter> : unique_ptr<_Tp, _Deleter> {
 };
 
 // make_unique
-// 不支持创建指向【已知边界】数组的unique_ptr
+// Creating a unique_ptr to an array with a known bound is not supported.
 
-// 非数组类型
+// non-array
 template <typename _Tp, typename... _Args,
           std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 unique_ptr<_Tp> make_unique(_Args &&...__args) {
@@ -152,11 +150,12 @@ unique_ptr<_Tp> make_unique(_Args &&...__args) {
 
 template <typename _Tp,
           std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
-unique_ptr<_Tp> make_unique_for_overwrite() { // C++20 创建对象，但不进行初始化
+unique_ptr<_Tp>
+make_unique_for_overwrite() { // C++20 create object, but not initialize.
     return unique_ptr<_Tp>(new _Tp);
 }
 
-// 未知边界数组类型
+// array with a unknown bound
 template <typename _Tp,
           std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
 unique_ptr<_Tp> make_unique(std::size_t __len) {
@@ -165,8 +164,7 @@ unique_ptr<_Tp> make_unique(std::size_t __len) {
 
 template <typename _Tp,
           std::enable_if_t<std::is_unbounded_array_v<_Tp>, int> = 0>
-unique_ptr<_Tp>
-make_unique_for_overwrite(std::size_t __len) { // C++20 创建数组，但不进行初始化
+unique_ptr<_Tp> make_unique_for_overwrite(std::size_t __len) {
     return unique_ptr<_Tp>(new std::remove_extent_t<_Tp>[__len]);
 }
 

@@ -216,7 +216,7 @@ public:
         }
     }
 
-    void reserve(std::size_t _n) { // 管理容量_cap，不应改变_size
+    void reserve(std::size_t _n) {
         if (_n < _cap) {
             return;
         }
@@ -312,7 +312,6 @@ public:
         _size = _size + 1;
     }
 
-    // 直接将构造对象的参数传进来
     template <typename... Args>
     _Tp &emplace_back(Args &&..._args) {
         if (_size + 1 >= _cap) [[unlikely]] {

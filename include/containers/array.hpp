@@ -273,7 +273,7 @@ struct array<_Tp, 0> {
     _LIBPENGCXX_DEFINE_COMPARISON(array);
 };
 
-// 只有所有构造函数的参数 类型都相同时，推导才成功
+// Derivation succeeds only if all constructor parameters are of the same type.
 template <typename _Tp, typename... _Ts>
 array(_Tp, _Ts...)
     -> array<std::enable_if_t<(std::is_same_v<_Tp, _Ts> && ...), _Tp>,

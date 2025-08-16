@@ -46,13 +46,6 @@ struct list {
 
 private:
     using ListNode = ListBaseNode<T>;
-    /*
-    List 存储的是 T 类型的元素，但实际在内存中分配和管理的是 ListValueNode<T>
-    类型的节点（包含数据和指针） 因此需要一个能够分配 ListValueNode<T>
-    的空间配置器 而不是直接使用用于分配 T 的 Alloc。rebind_alloc
-    提供了这种转换能力。 因此，AllocNode 表示一个能够分配 ListValueNode<T>
-    类型的空间配置器。
-    */
     using AllocNode = typename std::allocator_traits<
         Alloc>::template rebind_alloc<ListValueNode<T>>;
 
@@ -62,15 +55,6 @@ private:
 
     ListNode *newNode() {
         AllocNode allocNode(_alloc);
-        /*
-        std::allocator_traits<AllocNode>: 这是 std::allocator_traits
-        的特化，用于处理 AllocNode 类型的空间配置器。
-        ::allocate(allocNode, 1): 这是调用 std::allocator_traits 的静态成员函数
-        allocate。 allocNode: 这是要使用的空间配置器实例。 1: 表示要分配一个
-        ListValueNode<T> 对象的内存。
-        返回一个指向分配的内存块的指针，这个内存块足够存储一个 ListValueNode<T>
-        对象。
-        */
         return std::allocator_traits<AllocNode>::allocate(allocNode, 1);
     }
 

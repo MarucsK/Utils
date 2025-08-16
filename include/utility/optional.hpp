@@ -83,7 +83,7 @@ public:
             _value.~T();
             _has_value = false;
         }
-        new (&_value) T(std::move(value)); // 调用T的移动构造
+        new (&_value) T(std::move(value));
         _has_value = true;
         return *this;
     }

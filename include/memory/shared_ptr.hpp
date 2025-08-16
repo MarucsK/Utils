@@ -67,7 +67,6 @@ struct _SpCounter {
     virtual ~_SpCounter() = default;
 };
 
-// 管理指向对象的指针和删除器
 template <typename _Tp, typename _Deleter>
 struct _SpCounterImpl final : _SpCounter {
     _Tp *_M_ptr;
@@ -84,11 +83,11 @@ struct _SpCounterImpl final : _SpCounter {
     }
 };
 
-// 将控制块和对象分配在同一块内存
+// Allocate the control block and the object in the same block of memory.
 template <typename _Tp, typename _Deleter>
 struct _SpCounterImplFused final : _SpCounter {
     _Tp *_M_ptr;
-    void *_M_mem; // 指向分配的原始内存块的指针
+    void *_M_mem;
     [[no_unique_address]] _Deleter _M_deleter;
 
     explicit _SpCounterImplFused(_Tp *__ptr, void *__mem,
@@ -518,8 +517,7 @@ void _S_setupEnableSharedFromThis(_Tp *, _SpCounter *) {}
 // ------------------------------------------------------------------------------
 
 template <typename _Tp, typename... _Args,
-          std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> =
-              0> // _Tp不是未知边界数组
+          std::enable_if_t<!std::is_unbounded_array_v<_Tp>, int> = 0>
 shared_ptr<_Tp> make_shared(_Args... __args) {
     const auto __deleter = [](_Tp *__ptr) noexcept {
         __ptr->~_Tp();
@@ -531,11 +529,13 @@ shared_ptr<_Tp> make_shared(_Args... __args) {
 #if __cpp_aligned_new
     void *__mem = ::operator new(__size, std::align_val_t(__align));
     _Counter *__counter = reinterpret_cast<_Counter *>(
-        __mem); // 将分配的内存起始地址解释为控制块指针
+        __mem); // Interpret the starting address of the allocated memory as a
+                // control block pointer.
+
 #else
-    void *__mem = ::operator new(
-        __size +
-        __align); // 不支持对齐new则分配要比实际大一点。分配额外内存用于对齐
+    /*If aligned new is not supported, allocate slightly more than the actual
+     * size. Allocate extra memory for alignment.*/
+    void *__mem = ::operator new(__size + __align);
     _Counter *__counter = reinterpret_cast<_Counter *>(
         reinterpret_cast<std::size_t>(__mem) & __align);
 #endif

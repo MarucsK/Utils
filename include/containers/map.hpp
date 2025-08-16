@@ -8,7 +8,6 @@
 
 namespace Marcus {
 
-// 将原始的键比较器_Compare 适配到 比较键值对
 template <typename _Compare, typename _Value, typename = void>
 struct _RbTreeValueCompare {
 protected:
@@ -18,19 +17,16 @@ public:
     _RbTreeValueCompare(_Compare __comp = _Compare()) noexcept
         : _M_comp(__comp) {}
 
-    // 比较 键和键值对
     bool operator()(const typename _Value::first_type &__lhs,
                     const _Value &__rhs) const noexcept {
         return this->_M_comp(__lhs, __rhs.first);
     }
 
-    // 比较 键值对和键
     bool operator()(const _Value &__lhs,
                     const typename _Value::first_type &__rhs) const noexcept {
         return this->_M_comp(__lhs.first, __rhs);
     }
 
-    // 比较 两个键值对
     bool operator()(const _Value &__lhs, const _Value &__rhs) const noexcept {
         return this->_M_comp(__lhs.first, __rhs.first);
     }
@@ -42,7 +38,7 @@ template <typename _Compare, typename _Value>
 struct _RbTreeValueCompare<
     _Compare, _Value,
     decltype((void)static_cast<typename _Compare::is_transparent *>(
-        nullptr))> { // 当 _Compare 有 is_transparent 成员时启用
+        nullptr))> {
     [[no_unique_address]] _Compare _M_comp;
 
     _RbTreeValueCompare(_Compare __comp = _Compare()) noexcept

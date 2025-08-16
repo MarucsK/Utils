@@ -19,9 +19,8 @@ template <class _Ret, class... _Args>
 struct Function<_Ret(_Args...)> {
 private:
     struct _FuncBase {
-        virtual _Ret _M_call(_Args... __args) = 0; // 类型擦除后的统一接口
-        virtual std::unique_ptr<_FuncBase>
-        _M_clone() const = 0;                      // 克隆底层可调用对象
+        virtual _Ret _M_call(_Args... __args) = 0;
+        virtual std::unique_ptr<_FuncBase> _M_clone() const = 0;
         virtual const std::type_info &_M_type() const = 0;
         virtual ~_FuncBase() = default;
     };
@@ -50,19 +49,17 @@ private:
     std::unique_ptr<_FuncBase> _M_base;
 
 public:
-    Function() = default; // _M_base 初始化为 nullptr
+    Function() = default;
 
     Function(std::nullptr_t) noexcept : Function() {}
 
-    // 从任意的可调用对象_Fn 构造Function对象
-    // enable_if_t 的作用：阻止 Function 从不可调用的对象中初始化
-    // 另外标准要求 Function 还需要函数对象额外支持拷贝（用于 _M_clone）
     template <class _Fn,
               class = std::enable_if_t<
                   std::is_invocable_r_v<_Ret, std::decay_t<_Fn>, _Args...> &&
                   std::is_copy_constructible_v<_Fn> &&
                   !std::is_same_v<std::decay_t<_Fn>, Function<_Ret(_Args...)>>>>
-    Function(_Fn &&__f) // 没有 explicit，允许 lambda 表达式隐式转换成 Function
+    Function(_Fn &&__f) // Without explicit, lambda expressions are allowed to
+                        // implicitly convert to Function.
         : _M_base(std::make_unique<_FuncImpl<std::decay_t<_Fn>>>(
               std::in_place, std::forward<_Fn>(__f))) {}
 
@@ -92,7 +89,6 @@ public:
         return _M_base != nullptr;
     }
 
-    // 函数调用运算符
     _Ret operator()(_Args... __args) const {
         if (!_M_base) [[unlikely]] {
             throw std::bad_function_call();

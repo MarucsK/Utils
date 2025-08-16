@@ -39,7 +39,6 @@ private:
 
     using DestructorFunction = void (*)(char *) noexcept;
 
-    // 返回一个函数指针数组，每个元素对应一个备选类型的析构函数
     static DestructorFunction *destructors_table() noexcept {
         static DestructorFunction function_ptrs[sizeof...(_Ts)] = {
             [](char *_union_p) noexcept {
@@ -50,7 +49,6 @@ private:
 
     using CopyConstructorFunction = void (*)(char *, const char *) noexcept;
 
-    // 返回一个函数指针数组，每个元素对应一个备选类型的拷贝构造函数
     static CopyConstructorFunction *copy_constructors_table() noexcept {
         static CopyConstructorFunction function_ptrs[sizeof...(_Ts)] = {
             [](char *_union_dst, const char *_union_src) noexcept {
@@ -97,7 +95,6 @@ private:
     using ConstVisitorFunction = std::common_type<typename std::invoke_result<
         Lambda, const _Ts &>::type...>::type (*)(const char *, Lambda &&);
 
-    // 返回一个函数指针数组，每个元素用于对 const Variant 调用 visit
     template <typename Lambda>
     static ConstVisitorFunction<Lambda> *const_visitors_table() noexcept {
         static ConstVisitorFunction<Lambda> function_ptrs[sizeof...(_Ts)] = {
@@ -113,7 +110,6 @@ private:
     using VisitorFunction = std::common_type<typename std::invoke_result<
         Lambda, _Ts &>::type...>::type (*)(char *, Lambda &&);
 
-    // 返回一个函数指针数组，每个元素用于对 非const Variant 调用 visit
     template <typename Lambda>
     static VisitorFunction<Lambda> *visitors_table() noexcept {
         static VisitorFunction<Lambda> function_ptrs[sizeof...(_Ts)] = {
