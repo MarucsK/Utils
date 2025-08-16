@@ -139,7 +139,7 @@ public:
         if (&_other == this) [[unlikely]] {
             return *this;
         }
-        reserve(_other.size);
+        reserve(_other.size());
         _size = _other._size;
         for (std::size_t _i = 0; _i != _size; _i++) {
             std::construct_at(&_data[_i], std::as_const(_other._data[_i]));
