@@ -44,7 +44,7 @@ public:
         _data = _alloc.allocate(_n);
         _cap = _size = _n;
         for (std::size_t _i = 0; _i != _n; ++_i) {
-            std::construct_at(&_data[_i], 0);
+            std::construct_at(&_data[_i]);
         }
     }
 
