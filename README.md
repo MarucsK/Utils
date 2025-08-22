@@ -1,16 +1,18 @@
-## Utils
-
+### Utils
 
 *   Containers:
     *   array
     *   vector
     *   list
+    *   deque
     *   forward_list
-    *   map
-    *   set
+    *   map, multimap
+    *   set, multiset
 
 *   Adapters
     *   priority_queue
+    *   stack
+    *   queue
 
 *   Smart Pointers:
     *   shared_ptr
