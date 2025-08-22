@@ -3,8 +3,8 @@
 *   Containers:
     *   array
     *   vector
-    *   list
     *   deque
+    *   list
     *   forward_list
     *   map, multimap
     *   set, multiset
