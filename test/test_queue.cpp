@@ -1,4 +1,4 @@
-#include <adapters/queue.hpp>
+#include <adaptors/queue.hpp>
 #include <cassert>
 #include <iostream>
 #include <list>

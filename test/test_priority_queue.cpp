@@ -1,4 +1,4 @@
-#include <adapters/priority_queue.hpp>
+#include <adaptors/priority_queue.hpp>
 #include <algorithm>
 #include <cassert>
 #include <iostream>

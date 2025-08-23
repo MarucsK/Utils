@@ -1,4 +1,4 @@
-#include <adapters/stack.hpp>
+#include <adaptors/stack.hpp>
 #include <cassert>
 #include <iostream>
 #include <string>
