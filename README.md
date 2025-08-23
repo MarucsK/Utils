@@ -9,7 +9,7 @@
     *   map, multimap
     *   set, multiset
 
-*   Adapters
+*   Adaptors
     *   priority_queue
     *   stack
     *   queue
@@ -19,9 +19,10 @@
     *   unique_ptr
     *   weak_ptr
 
-*   Utilities:
+*   General Utilities:
     *   function
     *   optional
     *   variant
+    *   any
 
 *   type_traits
